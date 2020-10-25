@@ -1,0 +1,38 @@
+CHIP ShiftLeft{
+     IN in[16];
+     OUT out[16];
+     
+     PARTS:
+	 Not(in=true, out=out[0]);
+	 Not(in=in[0], out=temp0);
+	 Not(in=temp0, out=out[1]);
+	 Not(in=in[1], out=temp1);
+	 Not(in=temp1, out=out[2]);
+	 Not(in=in[2], out=temp2);
+	 Not(in=temp2, out=out[3]);
+	 Not(in=in[3], out=temp3);
+	 Not(in=temp3, out=out[4]);
+	 Not(in=in[4], out=temp4);
+	 Not(in=temp4, out=out[5]);
+	 Not(in=in[5], out=temp5);
+	 Not(in=temp5, out=out[6]);
+	 Not(in=in[6], out=temp6);
+	 Not(in=temp6, out=out[7]);
+	 Not(in=in[7], out=temp7);
+	 Not(in=temp7, out=out[8]);
+	 Not(in=in[8], out=temp8);
+	 Not(in=temp8, out=out[9]);
+	 Not(in=in[9], out=temp9);
+	 Not(in=temp9, out=out[10]);
+	 Not(in=in[10], out=temp10);
+	 Not(in=temp10, out=out[11]);
+	 Not(in=in[11], out=temp11);
+	 Not(in=temp11, out=out[12]);
+	 Not(in=in[12], out=temp12);
+	 Not(in=temp12, out=out[13]);
+	 Not(in=in[13], out=temp13);
+	 Not(in=temp13, out=out[14]);
+	 Not(in=in[14], out=temp14);
+	 Not(in=temp14, out=out[15]);
+	 
+}
