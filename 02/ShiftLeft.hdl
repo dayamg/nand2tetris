@@ -32,7 +32,7 @@ CHIP ShiftLeft{
 	 Not(in=temp12, out=out[13]);
 	 Not(in=in[13], out=temp13);
 	 Not(in=temp13, out=out[14]);
-	 Not(in=in[14], out=temp14);
+	 Not(in=in[15], out=temp14);
 	 Not(in=temp14, out=out[15]);
 	 
 }
