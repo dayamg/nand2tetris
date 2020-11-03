@@ -1,0 +1,38 @@
+dayamg, royee.shtoyerman
+===============================================================================
+Daya Matok Gawi, ID 311143051, daya.matokgawi@mail.huji.ac.il
+Royee Shtoryrman, ID 318903713, roy.shtoyerman@cs.huji.ac.il
+===============================================================================
+
+                           Project 4 - Asm File
+                           ----------------------- 
+  
+
+Submitted Files
+---------------
+README - This file.
+mult/Mult.asm - 
+fill/Fill.asm -
+sort/Sort.asm -
+divide/Divide.asm - implement division between R13 (num1) and R14(num2), store the result in R15.
+
+Remarks
+-------
+divide/Divide impelentaion is as follows:
+
+first checking edge cases.
+if num1=num2 -> result=1
+if num2>num1 -> result=0
+if num2=1 -> result=num1
+
+then, init result=1.
+While (num1)>(num2*2) -> result*=2, num2*=2
+
+partnum2 = num2/2
+partresult = result/2
+
+while partresult !=0 and partnum2 !=0:
+if (num2+partnum2)<num1 -> num2 += partnum2, result += partresult 
+partresult/=2
+partnum /=2
+at the end of the loop R15=result
