@@ -1,0 +1,24 @@
+
+
+CHIP PCcontrol {
+
+    IN  zr,         	
+        ng,
+		jumpbits[3],
+        instmsb;          		
+
+    OUT load;
+	
+    PARTS:
+	Not(in=ng, out=notng);
+	Not(in=zr, out=notzr);
+	And(a=notng, b=notzr, out=pos);
+	Mux(a=false, b=jumpbits[0], sel=pos, out=posmuxout);
+	Mux(a=false, b=jumpbits[1], sel=zr, out=zrmuxout);
+	Mux(a=false, b=jumpbits[2], sel=ng, out=ngmuxout);
+	
+	Or(a=posmuxout, b=zrmuxout, out=temp);
+	Or(a=temp, b=ngmuxout, out=jumpresult);
+	And(a=jumpresult, b=instmsb, out=load);
+	
+}

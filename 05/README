@@ -1,0 +1,23 @@
+dayamg, royee.shtoyerman
+===============================================================================
+Daya Matok Gawi, ID 311143051, daya.matokgawi@mail.huji.ac.il
+Royee Shtoryrman, ID 318903713, roy.shtoyerman@cs.huji.ac.il
+===============================================================================
+
+                           Project 5 - HDL Files
+                           ----------------------- 
+  
+
+Submitted Files
+---------------
+README - This file.
+Memory.hdl - Entire RAM address space.
+CPU.hdl - The Hack CPU. 
+Computer.hdl - The platform's top-most chip
+ExtendAlu.hdl - Extanded ALU that contains multiputation, shift right and left operations. 
+CpuMul.hdl - The Hack CPU that uses the ExtendAlu.
+PCcontrol.hdl - logic that get ng, zr from the alu and the jump bits. it calcs the load signal for the PC (if a jump is needed). 
+Or16Way.hdl - bitwise or between 16 bit input, using 2 Or8Way and 1 or gate.
+
+Remarks
+-------
