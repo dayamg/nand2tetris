@@ -1,5 +1,7 @@
 import os
 import re
+import sys
+import copy
 
 # MAGIC NUMBERS - Dictionaries for translations
 SYMBOL_DICT = {"SP": 0, "LCL": 1, "ARG": 2, "THIS": 3, "THAT": 4, "R0": 0, "R1": 1, "R2": 2, "R3": 3,
@@ -18,8 +20,23 @@ COMP_DICT = {"0": "110101010", "1": "110111111", "-1": "110111010", "D": "110001
              "A": "110110000", "M": "111110000", "!D": "110001101", "!A": "110110001", "!M": "111110001",
              "D+M": "111000010", "D-A": "110010011", "D-M": "111010011", "A-D": "110000111", "M-D": "111000111",
              "A>>": "010000000", "M>>": "011000000"}
-
+# Constants
+VAR_DICT_START_ADDR = 16
+BIN_CMD_LEN = 16
 READ_MODE = "r"
+WRITE_MODE = "w"
+NO_LABEL_FILE = "no_label_file.asm"
+NEW_LINE = '\n'
+LABEL_PREFIX = '('
+LABEL_SUFFIX = ')'
+
+A_CMD_ASM_PREFIX = '@'
+A_CMD_BIN_PREFIX = "0"
+C_CMD_BIN_PREFIX = "1"
+
+# Global variables
+var_dict = {}
+var_address_pointer = 0
 
 
 def remove_comments_and_spaces(line):
@@ -33,37 +50,149 @@ def remove_comments_and_spaces(line):
     return line
 
 
-def line_is_label(line):
+def check_for_label(line):
     """
-    receives a line with no spaces or comments
-    :return (is_the_line_a_label, label_name)
+    Receives a line with no spaces or comments and check for label.
+    Return the label name, or none.
     """
-    label_name = ''
-
-
-    return False, label_name
+    label_name = None
+    if line[0] == LABEL_PREFIX:
+        label_name = line.strip(LABEL_PREFIX + LABEL_SUFFIX)
+    return label_name
 
 
 def remove_labels(file_name):
     """
-    Removes the labels from the input .asm file named file_name.
-    Writes the result in a new file named  file_nameNoLabels.txt
+    Removes the labels and comments from the input .asm file named file_name.
+    Writes the result in a new file named no_label_file.asm
     """
-    label_dict = dict()  # dictionary in form of {LABEL: line_number}
+    global var_dict
     line_count = 0
-
     asm_file = open(file_name, READ_MODE)
+    no_label_file = open(NO_LABEL_FILE, WRITE_MODE)
+
     for line in asm_file:
-        if not line.isspace():  # check if the line is not a whitespace
-            line = remove_comments_and_spaces(line)
+        # ignore comments and spaces.
+        line = remove_comments_and_spaces(line)
 
-            if line_is_label(line):
+        # if line is only whitespace or empty, then skip it.
+        if line.isspace() or line == "":
+            continue
+
+        # if line contain label, save the label and skip it.
+        label = check_for_label(line)
+        if label is not None:
+            var_dict[label] = line_count
+            continue
+
+        no_label_file.write(line + NEW_LINE)
+        line_count += 1
+
+    no_label_file.close()
+    asm_file.close()
+    return
 
 
+def var_dict_handler(var):
+    """
+    If var in dict, return the address accordingly.
+    else, give the var in the next available address (pointer) and return it.
+    """
+    global var_dict
+    global var_address_pointer
+    if var not in var_dict.keys():
+        var_dict[var] = var_address_pointer
+        var_address_pointer += 1
+    return var_dict[var]
 
 
-            line_count += 1
+def translate_a_cmd(line):
+    """
+    Get a line that contain an A command in asm and translate it to hack.
+    """
+    line = line.strip(A_CMD_ASM_PREFIX + NEW_LINE)
+    # check if address is number or variable
+    try:
+        address = bin(int(line))[2:]
+
+    except ValueError:
+        # Replace variable with an address.
+        address = bin(var_dict_handler(line))[2:]
+
+    # pad to 16 bits
+    cmd = A_CMD_BIN_PREFIX + address.zfill(BIN_CMD_LEN-1)
+    return cmd
 
 
+def translate_c_cmd(line):
+    """
+    Get a line that contain an C command in asm and translate it to hack.
+    """
+    line = line.strip(NEW_LINE)
+    # Parse command to dest, comp, jump
+    dest = 'null'
+    jump = 'null'
+    if line.find('=') != -1:
+        dest, line = line.split('=')
+    if line.find(';') != -1:
+        comp, jump = line.split(';')
+    else:
+        comp = line
+
+    # Build the binary command using the relevant dicts.
+    c_cmd = C_CMD_BIN_PREFIX  # the start of a C binary command.
+    c_cmd += COMP_DICT[comp]
+    c_cmd += DEST_DICT[dest]
+    c_cmd += JUMP_DICT[jump]
+    return c_cmd
 
 
+def translate_to_hack(hack_file_path):
+    """
+    Translate the no_labels_file.asm into hack commands and write it to the given file address.
+    Delete the no_labels_file.asm at the end.
+    """
+    no_label_file = open(NO_LABEL_FILE, READ_MODE)
+    hack_file = open(hack_file_path, WRITE_MODE)
+
+    line_count = 0
+    for line in no_label_file:
+        if line[0] == A_CMD_ASM_PREFIX:
+            binary_cmd = translate_a_cmd(line)
+        else:
+            binary_cmd = translate_c_cmd(line)
+
+        hack_file.write(binary_cmd + NEW_LINE)
+        line_count += 1
+    hack_file.close()
+    no_label_file.close()
+    os.remove(NO_LABEL_FILE)
+
+
+def assembler(asm_file_path):
+    """
+    Get an asm file and translate in into hack file with the same name.
+    """
+    # Reset var_dict and the address to start storing variables in memory before every file.
+    global var_dict
+    var_dict = copy.deepcopy(SYMBOL_DICT)
+    global var_address_pointer
+    var_address_pointer = VAR_DICT_START_ADDR
+
+    remove_labels(asm_file_path)
+    hack_file_path = asm_file_path.strip(".asm") + ".hack"
+    translate_to_hack(hack_file_path)
+
+
+if __name__ == "__main__":
+    asm_path = sys.argv[1]
+    # Check if a file or a directory of asm files.
+    if os.path.isfile(asm_path):
+        assembler(asm_path)
+
+    if os.path.isdir(asm_path):
+        for filename in os.listdir(asm_path):
+            if filename.endswith(".asm"):
+                print(asm_path + filename)
+                assembler(asm_path + filename)
+                
