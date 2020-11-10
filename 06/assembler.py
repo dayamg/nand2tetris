@@ -187,5 +187,5 @@ if __name__ == "__main__":
     if os.path.isdir(asm_path):
         for filename in os.listdir(asm_path):
             if filename.endswith(".asm"):
-                assembler(asm_path + filename)
+                assembler(os.path.join(asm_path, filename))
 
