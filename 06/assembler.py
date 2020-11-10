@@ -25,7 +25,6 @@ VAR_DICT_START_ADDR = 16
 BIN_CMD_LEN = 16
 READ_MODE = "r"
 WRITE_MODE = "w"
-NO_LABEL_FILE = "no_label_file.asm"
 NEW_LINE = '\n'
 LABEL_PREFIX = '('
 LABEL_SUFFIX = ')'
@@ -69,7 +68,7 @@ def remove_labels(file_name):
     global var_dict
     line_count = 0
     asm_file = open(file_name, READ_MODE)
-    file_no_labels = []
+    file_no_labels_array = []
 
     for line in asm_file:
         # ignore comments and spaces.
@@ -85,11 +84,11 @@ def remove_labels(file_name):
             var_dict[label] = line_count
             continue
 
-        file_no_labels.append(line)
+        file_no_labels_array.append(line)
         line_count += 1
 
     asm_file.close()
-    return file_no_labels
+    return file_no_labels_array
 
 
 def var_dict_handler(var):
@@ -148,8 +147,7 @@ def translate_c_cmd(line):
 
 def translate_to_hack(hack_file_path, file_no_labels_array):
     """
-    Translate the no_labels_file.asm into hack commands and write it to the given file address.
-    Delete the no_labels_file.asm at the end.
+    Translate the no labels array into hack commands and write it to the given file address.
     """
     hack_file = open(hack_file_path, WRITE_MODE)
 
@@ -163,7 +161,6 @@ def translate_to_hack(hack_file_path, file_no_labels_array):
         hack_file.write(binary_cmd + NEW_LINE)
         line_count += 1
     hack_file.close()
-    os.remove(NO_LABEL_FILE)
 
 
 def assembler(asm_file_path):
