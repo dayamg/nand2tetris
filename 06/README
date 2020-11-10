@@ -1,0 +1,20 @@
+dayamg, royee.shtoyerman
+===============================================================================
+Daya Matok Gawi, ID 311143051, daya.matokgawi@mail.huji.ac.il
+Royee Shtoyerman, ID 318903713, roy.shtoyerman@cs.huji.ac.il
+===============================================================================
+
+                           Project 6 - Assembler
+                           -----------------------
+
+
+Submitted Files
+---------------
+README - This file.
+assembler.py - The Python file that converts assembly files into a hack file.
+Makefile - The "black box" make program that runs the assembler.
+Assembler - The make program that runs the python file.
+
+Remarks
+We used dictionaries for the main conversion part, and stored the symbols dictionaries in global variables.
+-------
