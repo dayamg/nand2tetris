@@ -64,12 +64,12 @@ def check_for_label(line):
 def remove_labels(file_name):
     """
     Removes the labels and comments from the input .asm file named file_name.
-    Writes the result in a new file named no_label_file.asm
+    Returns an array, in which every element is a line of the file without labels.
     """
     global var_dict
     line_count = 0
     asm_file = open(file_name, READ_MODE)
-    no_label_file = open(NO_LABEL_FILE, WRITE_MODE)
+    file_no_labels = []
 
     for line in asm_file:
         # ignore comments and spaces.
@@ -85,12 +85,11 @@ def remove_labels(file_name):
             var_dict[label] = line_count
             continue
 
-        no_label_file.write(line + NEW_LINE)
+        file_no_labels.append(line)
         line_count += 1
 
-    no_label_file.close()
     asm_file.close()
-    return
+    return file_no_labels
 
 
 def var_dict_handler(var):
@@ -147,16 +146,15 @@ def translate_c_cmd(line):
     return c_cmd
 
 
-def translate_to_hack(hack_file_path):
+def translate_to_hack(hack_file_path, file_no_labels_array):
     """
     Translate the no_labels_file.asm into hack commands and write it to the given file address.
     Delete the no_labels_file.asm at the end.
     """
-    no_label_file = open(NO_LABEL_FILE, READ_MODE)
     hack_file = open(hack_file_path, WRITE_MODE)
 
     line_count = 0
-    for line in no_label_file:
+    for line in file_no_labels_array:
         if line[0] == A_CMD_ASM_PREFIX:
             binary_cmd = translate_a_cmd(line)
         else:
@@ -165,7 +163,6 @@ def translate_to_hack(hack_file_path):
         hack_file.write(binary_cmd + NEW_LINE)
         line_count += 1
     hack_file.close()
-    no_label_file.close()
     os.remove(NO_LABEL_FILE)
 
 
@@ -179,9 +176,9 @@ def assembler(asm_file_path):
     global var_address_pointer
     var_address_pointer = VAR_DICT_START_ADDR
 
-    remove_labels(asm_file_path)
+    file_no_labels_array = remove_labels(asm_file_path)
     hack_file_path = asm_file_path.strip(".asm") + ".hack"
-    translate_to_hack(hack_file_path)
+    translate_to_hack(hack_file_path, file_no_labels_array)
 
 
 if __name__ == "__main__":
@@ -194,4 +191,4 @@ if __name__ == "__main__":
         for filename in os.listdir(asm_path):
             if filename.endswith(".asm"):
                 assembler(asm_path + filename)
-                
+
