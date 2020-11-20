@@ -42,10 +42,11 @@ D=M-D /// D = y - x
 
 @RETURNFALSE
 D;JGT /// if D = y - x > 0, then y > x, so return FALSE
+@END
+0;JMP
 
 @RETURNTRUE
 D;JLT /// if D = y - x < 0, then y < x, so return TRUE
-
 @END
 0;JMP
 
