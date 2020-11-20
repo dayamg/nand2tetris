@@ -1,0 +1,13 @@
+
+def write_get_pointer_A_command(asm_file, pointer):
+    """
+    writes the A command that saves in D the value of the RAM cell of the given pointer
+    pointer is a string, one of the values in POINTER_DICT. (Or maybe we should receive an int instead?)
+    We are assuming that asm_file is already open and in write mode.
+    """
+    pointer_value = POINTER_DICT[pointer]
+
+    # Get the value of RAM[pointer]: @pointer_value \n
+
+
+    asm_file.write( + NEW_LINE)
