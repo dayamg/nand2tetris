@@ -3,10 +3,6 @@ import re
 import sys
 
 
-
-# I don't know if this is really necessary, but for now
-NUMBER_OF_ARGS_DICT = {"add": 2, "sub": 2, "neg": 1, "eq": 2, "gt": 2, "lt": 2, "and": 2, "or": 2, "not:": 1}
-
 VM_SUFFIX = ".vm"
 ASM_SUFFIX = ".asm"
 READ_MODE = "r"
@@ -102,12 +98,19 @@ def generate_pop_cmd(vm_cmd, vm_file):
     return cmd_string
 
 
-def generate_arithmetic_cmd(vm_cmd):
+def copy_from_file_to_asm(asm_file, other_file_name):
+    other_file = open(other_file_name)
+    for line in other_file:
+        asm_file.write(line)
+    other_file.close()
+
+
+def generate_arithmetic_cmd(vm_cmd, asm_file):
     """
-    !!!TBD!!!
     writes vm arithmetic commands in asm and returns it.
     """
-    cmd_string = ""
+    cmd_string = vm_cmd[0]
+    copy_from_file_to_asm(asm_file, cmd_string + ASM_SUFFIX)
     return cmd_string
 
 
