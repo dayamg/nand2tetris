@@ -27,11 +27,11 @@ D;JLT /// if x<0, jump to y negative (XNEG)
 MD=M-1  /// sign of x: 1, so calculate R15 = sign(y)-sign(x), D = sign(y)-sign(x)
 
 (CHECKSIGN)
-@RETURNFALSE
-D;JGT /// if D = sign(y)-sign(x) > 0, then y > x, so return FALSE
-
 @RETURNTRUE
-D;JLT /// if D = sign(y)-sign(x) < 0, then y < x, so return TRUE
+D;JGT /// if D = sign(y)-sign(x) > 0, then y < x, so return TRUE
+
+@RETURNFALSE
+D;JLT /// if D = sign(y)-sign(x) < 0, then y > x, so return FALSE
 
 /// Else, we need to compare x and y, and as they are the same sign, there are no overflow problems
 @R14
@@ -39,14 +39,14 @@ D=M  /// D = x
 @R13 /// M = y
 D=M-D /// D = y - x
 
-@RETURNFALSE
-D;JGT /// if D = y - x > 0, then y > x, so return FALSE
+@RETURNTRUE
+D;JGT /// if D = y - x > 0, then y < x, so return TRUE
 
 @RETURNFALSE
 D;JEQ /// if D = y - x = 0, then y = x, so return FALSE
 
-@RETURNTRUE
-D;JLT /// if D = y - x < 0, then y < x, so return TRUE
+@RETURNFALSE
+D;JLT /// if D = y - x < 0, then y > x, so return FALSE
 @END
 0;JMP
 
