@@ -22,6 +22,8 @@ THAT_ADDRESS = 4
 
 SP_CHAR = "SP"
 
+g_index = 0  # Global index for labeling
+
 # A dictionary for translating variables types. Notice: the string "SP" is not used in the vm file
 # (as there is no special name for it), and "constant" is not a real RAM section
 SEGMENT_DICT = {SP_CHAR: SP_ADDRESS, CONSTANT: SP_ADDRESS, "local": LCL_ADDRESS, "argument": ARG_ADDRESS,
@@ -101,6 +103,7 @@ def generate_pop_cmd(vm_cmd, vm_file):
 def copy_from_file_to_asm(asm_file, other_file_name):
     other_file = open(other_file_name)
     for line in other_file:
+        line = line.replace("i", str(g_index))
         asm_file.write(line)
     other_file.close()
 
@@ -111,13 +114,14 @@ def generate_arithmetic_cmd(vm_cmd, asm_file):
     """
     cmd_string = vm_cmd[0]
     copy_from_file_to_asm(asm_file, cmd_string + ASM_SUFFIX)
-    return cmd_string
 
 
 def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
     """
     find the vm command type, generate it in asm, and write to asm file.
     """
+    global g_index
+
     # Write the translated command in a comment in the asm file.
     cmd_string = "///// "
     for i in vm_cmd:
@@ -128,16 +132,21 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
     file_name = os.path.splitext(os.path.basename(vm_file.name))[0]
 
     cmd_type = vm_cmd[0]
-    asm_cmd = ""
     if cmd_type == "push":
         asm_cmd = generate_push_cmd(vm_cmd, file_name)
+
+        # Write cmd_string to asm file.
+        asm_file.write(asm_cmd + NEW_LINE)
+
     if cmd_type == "pop":
         asm_cmd = generate_pop_cmd(vm_cmd, file_name)
-    if cmd_type in ["add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"]:
-        asm_cmd = generate_arithmetic_cmd(vm_cmd)
 
-    # Write cmd_string to asm file.
-    asm_file.write(asm_cmd + NEW_LINE)
+        # Write cmd_string to asm file.
+        asm_file.write(asm_cmd + NEW_LINE)
+
+    if cmd_type in ["add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"]:
+        copy_from_file_to_asm(asm_file, cmd_type + ASM_SUFFIX)
+        g_index += 1
 
 
 def remove_comments_and_spaces(segment):
@@ -183,12 +192,11 @@ def split_line_into_segments(vm_line):
     return segments_array
 
 
-def vm_translator(vm_path, asm_path):
+def vm_translator(vm_path, asm_file):
     """
     Get vm and asm files path, and translate vm into asm file.
     """
     vm_file = open(vm_path, READ_MODE)
-    asm_file = open(asm_path, WRITE_MODE)
 
     for line in vm_file:
 
@@ -201,18 +209,24 @@ def vm_translator(vm_path, asm_path):
         write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file)
 
     vm_file.close()
-    asm_file.close()
 
 
 if __name__ == "__main__":
-    vm_path = sys.argv[1]
+    vm_path_input = sys.argv[1]
     # Check if a file or a directory of vm files.
-    if os.path.isfile(vm_path):
-        asm_path = vm_path.replace(VM_SUFFIX, ASM_SUFFIX)
-        vm_translator(vm_path, asm_path)
+    if os.path.isfile(vm_path_input):
+        asm_path = vm_path_input.replace(VM_SUFFIX, ASM_SUFFIX)
+        asm_file = open(asm_path, WRITE_MODE)
+        vm_translator(vm_path_input, asm_file)
+        asm_file.close()
 
-    if os.path.isdir(vm_path):
-        asm_path = os.path.join(vm_path, VM_SUFFIX)
-        for filename in os.listdir(vm_path):
+    if os.path.isdir(vm_path_input):
+        asm_file_name = os.path.basename(vm_path_input)
+        asm_path = os.path.join(vm_path_input, asm_file_name+ASM_SUFFIX)
+        asm_file = open(asm_path, WRITE_MODE)
+        for filename in os.listdir(vm_path_input):
             if filename.endswith(VM_SUFFIX):
-                vm_translator(os.path.join(vm_path, filename), asm_path)
+                # Write a comment with file name
+                asm_file.write("////////*****//////// " + filename + NEW_LINE)
+                vm_translator(os.path.join(vm_path_input, filename), asm_file)
+        asm_file.close()
