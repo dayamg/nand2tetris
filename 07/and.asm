@@ -1,13 +1,16 @@
 /// returns y and x (bitwise)
 @R0
-A=M  /// go to *SP
+AM=M-1  /// go to *--SP
 D=M /// D = y
 
 /// SP--
 @R0
-AM=M-1  /// go to --SP
-D=D&M /// D = x and y
+AM=M-1  /// go to SP-1
+D=D&M /// D = x or y
 
 @R0
 A=M
-M=D /// *SP = D
+M=D /// *SP = x|y
+
+@R0
+M=M+1  /// go to SP++
