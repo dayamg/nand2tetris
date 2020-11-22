@@ -186,7 +186,7 @@ def split_line_into_segments(vm_line):
         segments_array[i] = remove_comments_and_spaces(segments_array[i])
 
         # Convert numbers to int
-        if segments_array[i].isnumeric():
+        if str(segments_array[i]).isdigit():
             segments_array[i] = int(segments_array[i])
 
     return segments_array
@@ -221,6 +221,7 @@ if __name__ == "__main__":
         asm_file.close()
 
     if os.path.isdir(vm_path_input):
+        vm_path_input = vm_path_input.rstrip('/')
         asm_file_name = os.path.basename(vm_path_input)
         asm_path = os.path.join(vm_path_input, asm_file_name+ASM_SUFFIX)
         asm_file = open(asm_path, WRITE_MODE)
