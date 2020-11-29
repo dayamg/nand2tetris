@@ -3,6 +3,8 @@ import re
 import sys
 from asm_helper import *
 
+# test git commit
+
 VM_SUFFIX = ".vm"
 ASM_SUFFIX = ".asm"
 READ_MODE = "r"
