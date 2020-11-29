@@ -64,6 +64,30 @@ def generate_if_goto_cmd(vm_cmd, func_name):
     return cmd_string
 
 
+def generate_function_cmd(vm_cmd, file_name):
+    # function g nVars
+    function_name = vm_cmd[1]
+    nVars = vm_cmd[2]
+    cmd_string = "(" + file_name + "." + function_name + ")" + "\n"
+    for i in range(nVars):
+        if i == 1:
+            cmd_string += PUSH_0_INIT + "\n"
+        cmd_string += PUSH_0_REPEAT + "\n"
+    return cmd_string
+
+
+def generate_call_cmd(vm_cmd, file_name):
+    # call g nArgs
+    function_name = vm_cmd[1]
+    nArgs = vm_cmd[2]
+    cmd_string = CALL_CMD + "\n"
+    # cmd_string = cmd_string.replace("index", str(return_cnr))
+    cmd_string = cmd_string.replace("fileName", file_name)
+    cmd_string = cmd_string.replace("functionName", function_name)
+    cmd_string = cmd_string.replace("nArgs", nArgs)
+    return cmd_string
+
+
 def generate_push_cmd(vm_cmd, vm_file):
     """
     writes the command "push segment i" in asm and return it.

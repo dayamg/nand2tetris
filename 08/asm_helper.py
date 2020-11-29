@@ -290,3 +290,97 @@ D=M
 D;JNE
 """
 
+# used for function command
+PUSH_0_INIT = """
+@0
+D=A
+@R0
+A=M
+M=D // *SP=0
+@R0
+MA=M+1
+"""
+
+PUSH_0_REPEAT = """
+M=D // D=0
+@R0
+MA=M+1
+"""
+
+CALL_CMD = """
+// push returnAddress
+@fileName.functionName$return.index
+D=A
+@R0
+A=M
+M=D // *SP=returnAddress
+@R0
+M=M+1
+
+// push LCL
+@LCL
+D=A
+@R0
+A=M
+M=D // *SP=LCL
+@R0
+M=M+1
+
+// push ARG
+@ARG
+D=A
+@R0
+A=M
+M=D // *SP=ARG
+@R0
+M=M+1
+
+// push THIS
+@THIS
+D=A
+@R0
+A=M
+M=D // *SP=THIS
+@R0
+M=M+1
+
+// push THAT
+@THAT
+D=A
+@R0
+A=M
+M=D // *SP=THAT
+@R0
+M=M+1
+
+// ARG = SP-nArgs-5
+@SP
+D=A
+@nArgs
+D=D-A
+@R13
+M=D    // R13=SP-nArgs
+@5
+D=A
+@R13
+D=M-D  // D=SP-nArgs-5
+@ARG
+M=D
+
+// LCL = SP
+@SP
+D=M
+@LCL
+M=D
+
+// goto g
+@fileName.functionName
+0; JMP
+
+// returnAddress:
+(fileName.functionName$return.index)
+"""
+
+
+
+
