@@ -12,6 +12,9 @@ WRITE_MODE = "w"
 NEW_LINE = '\n'
 SPACE_CHAR = " "
 
+SEG_NAME_TOKEN = "SEG_NAME"  # The name used in the asm file as a , to be replaced
+SEG_INDEX_TOKEN = "seg_index"  # The name used in the asm file as a , to be replaced
+
 CONSTANT = "constant"
 
 A_COMMAND_PREFIX = '@'
@@ -24,7 +27,8 @@ THAT_ADDRESS = 4
 
 SP_CHAR = "SP"
 
-g_index = 0  # Global index for labeling
+g_arith_i_index = 0  # Global index i for labeling arithmetic commands
+g_func_j_index = 0  # Global index j for labeling functions commands
 
 # A dictionary for translating variables types. Notice: the string "SP" is not used in the vm file
 # (as there is no special name for it), and "constant" is not a real RAM section
@@ -160,7 +164,7 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
     """
     find the vm command type, generate it in asm, and write to asm file.
     """
-    global g_index
+    global g_arith_i_index
 
     # Write the translated command in a comment in the asm file.
     cmd_string = "///// "
@@ -185,9 +189,31 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
         asm_file.write(asm_cmd + NEW_LINE)
 
     if cmd_type in ["add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"]:
-        arithmetic_asm_str = ARITHMETIC_DICT[cmd_type].replace("i", str(g_index))
+        arithmetic_asm_str = ARITHMETIC_DICT[cmd_type].replace("i", str(g_arith_i_index))
         asm_file.write(arithmetic_asm_str + NEW_LINE)
-        g_index += 1
+        g_arith_i_index += 1
+
+    if cmd_type == "return":
+        generate_return_cmd(asm_file)
+
+
+def generate_restore_command(asm_file, seg_name, seg_index):
+    """
+    writes the command that restores the pointer seg_name to value before function call.
+    E.g., generate_restore_command(asm_file, "THIS", 1) will write the command THIS = *(frame - 1).
+    """
+
+    asm_cmd = RESTORE_VAL_CMD.replace(SEG_NAME_TOKEN, seg_name).replace(SEG_INDEX_TOKEN, seg_index)
+    asm_file.write(asm_cmd + NEW_LINE)
+
+
+def generate_return_cmd(asm_file):
+    asm_file.write(RETURN_ASM_1 + NEW_LINE)
+    generate_restore_command(asm_file, "THAT", 1)
+    generate_restore_command(asm_file, "THIS", 2)
+    generate_restore_command(asm_file, "ARG", 3)
+    generate_restore_command(asm_file, "LCL", 4)
+    asm_file.write(RETURN_ASM_2 + NEW_LINE)  # goto retAddr = *R14
 
 
 def remove_comments_and_spaces(segment):
