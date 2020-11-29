@@ -291,3 +291,50 @@ D=M
 D;JNE
 """
 
+RESTORE_VAL_CMD = """
+/// restores the value of SEG_NAME to framej - seg_index
+/// e.g., *THAT = *(frame - 1)
+@framej
+D=M
+@seg_index   /// A=seg_index
+D=D-A
+A=D /// goto *(framej - seg_index)
+D=M /// keep *(framej - seg_index)
+@SEG_NAME
+M=D /// M=M-seg_index
+"""
+
+RETURN_ASM_1 = """
+/// return - first part (without reset of THIS, THAT, etc...)
+@LCL
+D=M
+@R13 /// @frame = @R13
+M=D /// frame = LCL
+
+@5
+D=D-A  /// D = D - 5
+A=D /// go to *(frame-5)
+D=M
+@R14 /// @R14 = @retAddr
+M=D  /// keep the return address val, *(frame-5)
+
+@SP /// *ARG = pop
+A=M-1
+D=M
+@ARG
+M=D
+
+@ARG  /// SP=ARG+1  (restore SP to point at first argument)
+D=M
+@SP
+M=D+1
+"""
+
+RETURN_ASM_2 = """
+/// return - second part (after setting THIS, THAT,...) 
+@R14 /// @R14 = @retAddr
+A=M /// go to *retAddr
+0;JMP
+"""
+
+
