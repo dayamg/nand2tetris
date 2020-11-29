@@ -22,7 +22,7 @@ THAT_ADDRESS = 4
 
 SP_CHAR = "SP"
 
-g_index = 0  # Global index for labeling
+g_arith_i_index = 0  # Global index for labeling
 
 # A dictionary for translating variables types. Notice: the string "SP" is not used in the vm file
 # (as there is no special name for it), and "constant" is not a real RAM section
@@ -103,7 +103,7 @@ def generate_pop_cmd(vm_cmd, vm_file):
 def copy_from_file_to_asm(asm_file, other_file_name):
     other_file = open(other_file_name)
     for line in other_file:
-        line = line.replace("i", str(g_index))
+        line = line.replace("i", str(g_arith_i_index))
         asm_file.write(line)
     other_file.close()
 
@@ -120,7 +120,7 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
     """
     find the vm command type, generate it in asm, and write to asm file.
     """
-    global g_index
+    global g_arith_i_index
 
     # Write the translated command in a comment in the asm file.
     cmd_string = "///// "
