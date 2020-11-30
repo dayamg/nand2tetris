@@ -28,7 +28,7 @@ THAT_ADDRESS = 4
 SP_CHAR = "SP"
 
 g_arith_i_index = 0  # Global index i for labeling arithmetic commands
-g_func_j_index = 0  # Global index j for labeling functions commands
+g_call_j_index = 0  # Global index j for labeling call commands
 
 # A dictionary for translating variables types. Notice: the string "SP" is not used in the vm file
 # (as there is no special name for it), and "constant" is not a real RAM section
@@ -77,8 +77,9 @@ def generate_function_cmd(vm_cmd, asm_file):
     nVars = vm_cmd[2]
     cmd_string = "(" + function_name + ")" + "\n"
     for i in range(nVars):
-        if i == 1:
+        if i == 0:
             cmd_string += PUSH_0_INIT + "\n"
+            continue
         cmd_string += PUSH_0_REPEAT + "\n"
 
     # Write cmd_string to asm file.
@@ -87,12 +88,14 @@ def generate_function_cmd(vm_cmd, asm_file):
 
 def generate_call_cmd(vm_cmd, asm_file):
     # call g nArgs
+    global g_call_j_index
     function_name = vm_cmd[1]
     nArgs = vm_cmd[2]
     cmd_string = CALL_CMD + "\n"
-    # cmd_string = cmd_string.replace("index", str(return_cnr))
+    cmd_string = cmd_string.replace("index", str(g_call_j_index))
     cmd_string = cmd_string.replace("functionName", function_name)
     cmd_string = cmd_string.replace("nArgs", nArgs)
+    g_call_j_index += 1
 
     # Write cmd_string to asm file.
     asm_file.write(cmd_string + NEW_LINE)
@@ -177,7 +180,7 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
     global g_arith_i_index
 
     # Write the translated command in a comment in the asm file.
-    cmd_string = "///// "
+    cmd_string = "//#//#// "
     for i in vm_cmd:
         cmd_string += " " + str(i)
     asm_file.write(cmd_string + NEW_LINE)
@@ -224,7 +227,7 @@ def generate_restore_command(asm_file, seg_name, seg_index):
     E.g., generate_restore_command(asm_file, "THIS", 1) will write the command THIS = *(frame - 1).
     """
 
-    asm_cmd = RESTORE_VAL_CMD.replace(SEG_NAME_TOKEN, seg_name).replace(SEG_INDEX_TOKEN, seg_index)
+    asm_cmd = RESTORE_VAL_CMD.replace(SEG_NAME_TOKEN, seg_name).replace(SEG_INDEX_TOKEN, str(seg_index))
     asm_file.write(asm_cmd + NEW_LINE)
 
 

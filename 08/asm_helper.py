@@ -382,14 +382,14 @@ M=D
 """
 
 RESTORE_VAL_CMD = """
-/// restores the value of SEG_NAME to framej - seg_index
+/// restores the value of SEG_NAME to frame - seg_index
 /// e.g., *THAT = *(frame - 1)
-@framej
+@R13 // R13 = frame
 D=M
 @seg_index   /// A=seg_index
 D=D-A
-A=D /// goto *(framej - seg_index)
-D=M /// keep *(framej - seg_index)
+A=D /// goto *(frame - seg_index)
+D=M /// keep *(frame - seg_index)
 @SEG_NAME
 M=D /// M=M-seg_index
 """
