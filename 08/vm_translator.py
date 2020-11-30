@@ -299,6 +299,10 @@ def vm_translator(vm_path, asm_file):
     vm_file.close()
 
 
+def generate_sys_init(asm_file):
+    asm_file.write(SYS_INIT_1 + NEW_LINE)
+
+
 if __name__ == "__main__":
     vm_path_input = sys.argv[1]
     # Check if a file or a directory of vm files.

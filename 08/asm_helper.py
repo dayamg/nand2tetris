@@ -309,7 +309,7 @@ MA=M+1
 
 CALL_CMD = """
 // push returnAddress
-@fileName.functionName$return.index
+@functionName$return.index
 D=A
 @R0
 A=M
