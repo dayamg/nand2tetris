@@ -427,4 +427,9 @@ A=M /// go to *retAddr
 0;JMP
 """
 
-
+SYS_INIT_1 = """
+@256
+D=A
+@SP
+M=D
+"""
