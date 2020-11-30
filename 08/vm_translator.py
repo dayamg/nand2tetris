@@ -41,23 +41,25 @@ ARITHMETIC_DICT = {"add": ADD_ASM, "neg": NEG_ASM, "sub": SUB_ASM, "eq": EQ_ASM,
                    "gt": GT_ASM, "not": NOT_ASM, "or": OR_ASM, "and": AND_ASM}
 
 
-def generate_label_cmd(vm_cmd, func_name):
+def generate_label_cmd(vm_cmd, func_name, asm_file):
     label_name = vm_cmd[1]
     cmd_string = "(" + label_name + ")"
     if func_name:
         cmd_string = "(" + str(func_name) + "$" + label_name + ")"
-    return cmd_string
+    # Write cmd_string to asm file.
+    asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_goto_cmd(vm_cmd, func_name):
+def generate_goto_cmd(vm_cmd, func_name, asm_file):
     label_name = vm_cmd[1]
     cmd_string = "@" + label_name + "\n" + "0;JMP"
     if func_name:
         cmd_string = "@" + str(func_name) + "$" + label_name + "\n" + "0;JMP"
-    return cmd_string
+    # Write cmd_string to asm file.
+    asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_if_goto_cmd(vm_cmd, func_name):
+def generate_if_goto_cmd(vm_cmd, func_name, asm_file):
     label_name = vm_cmd[1]
     label_cmd = label_name
     if func_name:
@@ -65,34 +67,38 @@ def generate_if_goto_cmd(vm_cmd, func_name):
 
     cmd_string = IF_GOTO_ASM
     cmd_string = cmd_string.replace("label_name", label_cmd)
-    return cmd_string
+    # Write cmd_string to asm file.
+    asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_function_cmd(vm_cmd, file_name):
+def generate_function_cmd(vm_cmd, asm_file):
     # function g nVars
     function_name = vm_cmd[1]
     nVars = vm_cmd[2]
-    cmd_string = "(" + file_name + "." + function_name + ")" + "\n"
+    cmd_string = "(" + function_name + ")" + "\n"
     for i in range(nVars):
         if i == 1:
             cmd_string += PUSH_0_INIT + "\n"
         cmd_string += PUSH_0_REPEAT + "\n"
-    return cmd_string
+
+    # Write cmd_string to asm file.
+    asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_call_cmd(vm_cmd, file_name):
+def generate_call_cmd(vm_cmd, asm_file):
     # call g nArgs
     function_name = vm_cmd[1]
     nArgs = vm_cmd[2]
     cmd_string = CALL_CMD + "\n"
     # cmd_string = cmd_string.replace("index", str(return_cnr))
-    cmd_string = cmd_string.replace("fileName", file_name)
     cmd_string = cmd_string.replace("functionName", function_name)
     cmd_string = cmd_string.replace("nArgs", nArgs)
-    return cmd_string
+
+    # Write cmd_string to asm file.
+    asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_push_cmd(vm_cmd, vm_file):
+def generate_push_cmd(vm_cmd, vm_file, asm_file):
     """
     writes the command "push segment i" in asm and return it.
     """
@@ -125,10 +131,12 @@ def generate_push_cmd(vm_cmd, vm_file):
         cmd_string = "@R?\nD=M\n@R0\nA=M\nM=D	// *sp= R3/4\n@R0\nM=M+1"
         # if index is 0 then: THIS-3 else if 1 then: THAT-4
         cmd_string = cmd_string.replace("?", str(POINTER_DICT[index]))
-    return cmd_string
+
+    # Write cmd_string to asm file.
+    asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_pop_cmd(vm_cmd, vm_file):
+def generate_pop_cmd(vm_cmd, vm_file, asm_file):
     """
     writes the command "pop segment i" in asm and return it.
     """
@@ -157,7 +165,9 @@ def generate_pop_cmd(vm_cmd, vm_file):
         cmd_string = "@R0\nAM=M-1\nD=M\n@R?\nM=D"
         # if index is 0 then: THIS-3 else if 1 then: THAT-4
         cmd_string = cmd_string.replace("?", str(POINTER_DICT[index]))
-    return cmd_string
+
+    # Write cmd_string to asm file.
+    asm_file.write(cmd_string + NEW_LINE)
 
 
 def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
@@ -175,23 +185,34 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
     # Extract the file name for push/pop static commands.
     file_name = os.path.splitext(os.path.basename(vm_file.name))[0]
 
+    func_name = "FUNC_NAME_TBD"
+
     cmd_type = vm_cmd[0]
     if cmd_type == "push":
-        asm_cmd = generate_push_cmd(vm_cmd, file_name)
-
-        # Write cmd_string to asm file.
-        asm_file.write(asm_cmd + NEW_LINE)
+        generate_push_cmd(vm_cmd, file_name, asm_file)
 
     if cmd_type == "pop":
-        asm_cmd = generate_pop_cmd(vm_cmd, file_name)
-
-        # Write cmd_string to asm file.
-        asm_file.write(asm_cmd + NEW_LINE)
+        generate_pop_cmd(vm_cmd, file_name, asm_file)
 
     if cmd_type in ["add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"]:
         arithmetic_asm_str = ARITHMETIC_DICT[cmd_type].replace("i", str(g_arith_i_index))
         asm_file.write(arithmetic_asm_str + NEW_LINE)
         g_arith_i_index += 1
+
+    if cmd_type == "label":
+        generate_label_cmd(vm_cmd, func_name, asm_file)
+
+    if cmd_type == "goto":
+        generate_goto_cmd(vm_cmd, func_name, asm_file)
+
+    if cmd_type == "if-goto":
+        generate_if_goto_cmd(vm_cmd, func_name, asm_file)
+
+    if cmd_type == "function":
+        generate_function_cmd(vm_cmd, asm_file)
+
+    if cmd_type == "call":
+        generate_call_cmd(vm_cmd, asm_file)
 
     if cmd_type == "return":
         generate_return_cmd(asm_file)

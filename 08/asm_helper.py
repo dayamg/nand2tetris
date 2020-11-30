@@ -374,11 +374,11 @@ D=M
 M=D
 
 // goto g
-@fileName.functionName
+@functionName
 0; JMP
 
 // returnAddress:
-(fileName.functionName$return.index)
+(functionName$return.index)
 """
 
 RESTORE_VAL_CMD = """
