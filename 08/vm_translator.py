@@ -92,6 +92,12 @@ def generate_call_cmd(vm_cmd, file_name):
     return cmd_string
 
 
+def generate_sys_init(asm_file):
+    asm_file.write(SYS_INIT_1 + NEW_LINE)
+
+
+
+
 def generate_push_cmd(vm_cmd, vm_file):
     """
     writes the command "push segment i" in asm and return it.
