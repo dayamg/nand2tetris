@@ -3,8 +3,6 @@ import re
 import sys
 from asm_helper import *
 
-# test git commit
-
 VM_SUFFIX = ".vm"
 ASM_SUFFIX = ".asm"
 READ_MODE = "r"
@@ -27,10 +25,10 @@ THAT_ADDRESS = 4
 
 SP_CHAR = "SP"
 
+# Global variables:
 g_arith_i_index = 0  # Global index i for labeling arithmetic commands
 g_call_j_index = 0  # Global index j for labeling call commands
-
-g_curr_func = None
+g_curr_func = None  # Global string holding the name of the current translated function.
 
 # A dictionary for translating variables types. Notice: the string "SP" is not used in the vm file
 # (as there is no special name for it), and "constant" is not a real RAM section
@@ -44,7 +42,11 @@ ARITHMETIC_DICT = {"add": ADD_ASM, "neg": NEG_ASM, "sub": SUB_ASM, "eq": EQ_ASM,
 
 
 def generate_label_cmd(vm_cmd, asm_file):
+    """
+     writes the command "label c" in asm file.
+    """
     global g_curr_func
+
     label_name = vm_cmd[1]
     cmd_string = "(" + label_name + ")"
     if g_curr_func:
@@ -54,17 +56,25 @@ def generate_label_cmd(vm_cmd, asm_file):
 
 
 def generate_goto_cmd(vm_cmd, asm_file):
+    """
+     writes the command "goto c" in asm file.
+    """
     global g_curr_func
+
     label_name = vm_cmd[1]
-    cmd_string = "@" + label_name + "\n" + "0;JMP"
+    cmd_string = "@" + label_name + NEW_LINE + "0;JMP"
     if g_curr_func:
-        cmd_string = "@" + str(g_curr_func) + "$" + label_name + "\n" + "0;JMP"
+        cmd_string = "@" + str(g_curr_func) + "$" + label_name + NEW_LINE + "0;JMP"
     # Write cmd_string to asm file.
     asm_file.write(cmd_string + NEW_LINE)
 
 
 def generate_if_goto_cmd(vm_cmd, asm_file):
+    """
+     writes the command "if-goto c" in asm file.
+    """
     global g_curr_func
+
     label_name = vm_cmd[1]
     label_cmd = label_name
     if g_curr_func:
@@ -77,30 +87,37 @@ def generate_if_goto_cmd(vm_cmd, asm_file):
 
 
 def generate_function_cmd(vm_cmd, asm_file):
-    global g_curr_func
+    """
+     writes the command "function function_name nVars" in asm file.
+    """
     # function g nVars
+    global g_curr_func
+
     function_name = vm_cmd[1]
     g_curr_func = function_name
     nVars = vm_cmd[2]
-    cmd_string = "(" + function_name + ")" + "\n"
+    cmd_string = "(" + function_name + ")" + NEW_LINE
     for i in range(nVars):
         if i == 0:
-            cmd_string += PUSH_0_INIT + "\n"
+            cmd_string += PUSH_0_INIT + NEW_LINE
             continue
-        cmd_string += PUSH_0_REPEAT + "\n"
+        cmd_string += PUSH_0_REPEAT + NEW_LINE
 
     # Write cmd_string to asm file.
     asm_file.write(cmd_string + NEW_LINE)
 
 
 def generate_call_cmd(vm_cmd, asm_file):
+    """
+     writes the command "call function_name nArgs" in asm file.
+    """
     # call g nArgs
     global g_call_j_index
     global g_curr_func
 
     function_name = vm_cmd[1]
     nArgs = vm_cmd[2]
-    cmd_string = CALL_CMD + "\n"
+    cmd_string = CALL_CMD + NEW_LINE
     cmd_string = cmd_string.replace("index", str(g_call_j_index))
     cmd_string = cmd_string.replace("functionName", function_name)
     cmd_string = cmd_string.replace("nArgs", str(nArgs))
@@ -112,7 +129,7 @@ def generate_call_cmd(vm_cmd, asm_file):
 
 def generate_push_cmd(vm_cmd, vm_file, asm_file):
     """
-    writes the command "push segment i" in asm and return it.
+    writes the command "push segment i" in asm file.
     """
     segment = vm_cmd[1]
     cmd_string = ""
@@ -150,7 +167,7 @@ def generate_push_cmd(vm_cmd, vm_file, asm_file):
 
 def generate_pop_cmd(vm_cmd, vm_file, asm_file):
     """
-    writes the command "pop segment i" in asm and return it.
+    writes the command "pop segment i" in asm file.
     """
     segment = vm_cmd[1]
     cmd_string = ""
@@ -233,12 +250,14 @@ def generate_restore_command(asm_file, seg_name, seg_index):
     writes the command that restores the pointer seg_name to value before function call.
     E.g., generate_restore_command(asm_file, "THIS", 1) will write the command THIS = *(frame - 1).
     """
-
     asm_cmd = RESTORE_VAL_CMD.replace(SEG_NAME_TOKEN, seg_name).replace(SEG_INDEX_TOKEN, str(seg_index))
     asm_file.write(asm_cmd + NEW_LINE)
 
 
 def generate_return_cmd(asm_file):
+    """
+    writes the command "return" in asm file.
+    """
     asm_file.write(RETURN_ASM_1 + NEW_LINE)
     generate_restore_command(asm_file, "THAT", 1)
     generate_restore_command(asm_file, "THIS", 2)
