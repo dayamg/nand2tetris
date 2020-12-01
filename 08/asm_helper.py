@@ -319,7 +319,7 @@ M=M+1
 
 // push LCL
 @LCL
-D=A
+D=M
 @R0
 A=M
 M=D // *SP=LCL
@@ -328,7 +328,7 @@ M=M+1
 
 // push ARG
 @ARG
-D=A
+D=M
 @R0
 A=M
 M=D // *SP=ARG
@@ -337,7 +337,7 @@ M=M+1
 
 // push THIS
 @THIS
-D=A
+D=M
 @R0
 A=M
 M=D // *SP=THIS
@@ -346,7 +346,7 @@ M=M+1
 
 // push THAT
 @THAT
-D=A
+D=M
 @R0
 A=M
 M=D // *SP=THAT
@@ -355,7 +355,7 @@ M=M+1
 
 // ARG = SP-nArgs-5
 @SP
-D=A
+D=M
 @nArgs
 D=D-A
 @R13
