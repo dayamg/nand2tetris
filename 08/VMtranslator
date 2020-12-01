@@ -1,0 +1,2 @@
+#!/bin/bash
+python vm_translator.py $*

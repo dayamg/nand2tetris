@@ -30,7 +30,6 @@ SP_CHAR = "SP"
 g_arith_i_index = 0  # Global index i for labeling arithmetic commands
 g_call_j_index = 0  # Global index j for labeling call commands
 
-# g_func_name_stack = []
 g_curr_func = None
 
 # A dictionary for translating variables types. Notice: the string "SP" is not used in the vm file
@@ -78,14 +77,10 @@ def generate_if_goto_cmd(vm_cmd, asm_file):
 
 
 def generate_function_cmd(vm_cmd, asm_file):
-    # global g_func_name_stack
     global g_curr_func
     # function g nVars
     function_name = vm_cmd[1]
-    # g_func_name_stack.append(function_name)
-    # g_curr_func = g_func_name_stack[-1]
     g_curr_func = function_name
-
     nVars = vm_cmd[2]
     cmd_string = "(" + function_name + ")" + "\n"
     for i in range(nVars):
@@ -110,8 +105,6 @@ def generate_call_cmd(vm_cmd, asm_file):
     cmd_string = cmd_string.replace("functionName", function_name)
     cmd_string = cmd_string.replace("nArgs", str(nArgs))
     g_call_j_index += 1
-
-    # g_curr_func = function_name
 
     # Write cmd_string to asm file.
     asm_file.write(cmd_string + NEW_LINE)
@@ -204,8 +197,6 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
     # Extract the file name for push/pop static commands.
     file_name = os.path.splitext(os.path.basename(vm_file.name))[0]
 
-    func_name = "FUNC_NAME_TBD"
-
     cmd_type = vm_cmd[0]
     if cmd_type == "push":
         generate_push_cmd(vm_cmd, file_name, asm_file)
@@ -248,20 +239,12 @@ def generate_restore_command(asm_file, seg_name, seg_index):
 
 
 def generate_return_cmd(asm_file):
-    # global g_func_name_stack
-    # global g_curr_func
     asm_file.write(RETURN_ASM_1 + NEW_LINE)
     generate_restore_command(asm_file, "THAT", 1)
     generate_restore_command(asm_file, "THIS", 2)
     generate_restore_command(asm_file, "ARG", 3)
     generate_restore_command(asm_file, "LCL", 4)
     asm_file.write(RETURN_ASM_2 + NEW_LINE)  # goto retAddr = *R14
-    # print(g_func_name_stack)
-    # g_func_name_stack.pop()
-    # if not g_func_name_stack:
-    #     g_curr_func = None
-    # else:
-    #     g_curr_func = g_func_name_stack[-1]
 
 
 def remove_comments_and_spaces(segment):
