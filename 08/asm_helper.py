@@ -298,13 +298,13 @@ D=A
 A=M
 M=D // *SP=0
 @R0
-MA=M+1
+AM=M+1
 """
 
 PUSH_0_REPEAT = """
 M=D // D=0
 @R0
-MA=M+1
+AM=M+1
 """
 
 CALL_CMD = """
@@ -404,14 +404,15 @@ M=D /// frame = LCL
 @5
 D=D-A  /// D = D - 5
 A=D /// go to *(frame-5)
-D=M
+D=M  // D=retAddr
 @R14 /// @R14 = @retAddr
 M=D  /// keep the return address val, *(frame-5)
 
 @SP /// *ARG = pop
-A=M-1
+AM=M-1
 D=M
 @ARG
+A=M
 M=D
 
 @ARG  /// SP=ARG+1  (restore SP to point at first argument)

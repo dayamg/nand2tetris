@@ -30,6 +30,9 @@ SP_CHAR = "SP"
 g_arith_i_index = 0  # Global index i for labeling arithmetic commands
 g_call_j_index = 0  # Global index j for labeling call commands
 
+# g_func_name_stack = []
+g_curr_func = None
+
 # A dictionary for translating variables types. Notice: the string "SP" is not used in the vm file
 # (as there is no special name for it), and "constant" is not a real RAM section
 SEGMENT_DICT = {SP_CHAR: SP_ADDRESS, CONSTANT: SP_ADDRESS, "local": LCL_ADDRESS, "argument": ARG_ADDRESS,
@@ -41,29 +44,32 @@ ARITHMETIC_DICT = {"add": ADD_ASM, "neg": NEG_ASM, "sub": SUB_ASM, "eq": EQ_ASM,
                    "gt": GT_ASM, "not": NOT_ASM, "or": OR_ASM, "and": AND_ASM}
 
 
-def generate_label_cmd(vm_cmd, func_name, asm_file):
+def generate_label_cmd(vm_cmd, asm_file):
+    global g_curr_func
     label_name = vm_cmd[1]
     cmd_string = "(" + label_name + ")"
-    if func_name:
-        cmd_string = "(" + str(func_name) + "$" + label_name + ")"
+    if g_curr_func:
+        cmd_string = "(" + str(g_curr_func) + "$" + label_name + ")"
     # Write cmd_string to asm file.
     asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_goto_cmd(vm_cmd, func_name, asm_file):
+def generate_goto_cmd(vm_cmd, asm_file):
+    global g_curr_func
     label_name = vm_cmd[1]
     cmd_string = "@" + label_name + "\n" + "0;JMP"
-    if func_name:
-        cmd_string = "@" + str(func_name) + "$" + label_name + "\n" + "0;JMP"
+    if g_curr_func:
+        cmd_string = "@" + str(g_curr_func) + "$" + label_name + "\n" + "0;JMP"
     # Write cmd_string to asm file.
     asm_file.write(cmd_string + NEW_LINE)
 
 
-def generate_if_goto_cmd(vm_cmd, func_name, asm_file):
+def generate_if_goto_cmd(vm_cmd, asm_file):
+    global g_curr_func
     label_name = vm_cmd[1]
     label_cmd = label_name
-    if func_name:
-        label_cmd = str(func_name) + "$" + label_name
+    if g_curr_func:
+        label_cmd = str(g_curr_func) + "$" + label_name
 
     cmd_string = IF_GOTO_ASM
     cmd_string = cmd_string.replace("label_name", label_cmd)
@@ -72,8 +78,14 @@ def generate_if_goto_cmd(vm_cmd, func_name, asm_file):
 
 
 def generate_function_cmd(vm_cmd, asm_file):
+    # global g_func_name_stack
+    global g_curr_func
     # function g nVars
     function_name = vm_cmd[1]
+    # g_func_name_stack.append(function_name)
+    # g_curr_func = g_func_name_stack[-1]
+    g_curr_func = function_name
+
     nVars = vm_cmd[2]
     cmd_string = "(" + function_name + ")" + "\n"
     for i in range(nVars):
@@ -89,13 +101,17 @@ def generate_function_cmd(vm_cmd, asm_file):
 def generate_call_cmd(vm_cmd, asm_file):
     # call g nArgs
     global g_call_j_index
+    global g_curr_func
+
     function_name = vm_cmd[1]
     nArgs = vm_cmd[2]
     cmd_string = CALL_CMD + "\n"
     cmd_string = cmd_string.replace("index", str(g_call_j_index))
     cmd_string = cmd_string.replace("functionName", function_name)
-    cmd_string = cmd_string.replace("nArgs", nArgs)
+    cmd_string = cmd_string.replace("nArgs", str(nArgs))
     g_call_j_index += 1
+
+    # g_curr_func = function_name
 
     # Write cmd_string to asm file.
     asm_file.write(cmd_string + NEW_LINE)
@@ -203,13 +219,13 @@ def write_vm_cmd_to_asm(vm_cmd, asm_file, vm_file):
         g_arith_i_index += 1
 
     if cmd_type == "label":
-        generate_label_cmd(vm_cmd, func_name, asm_file)
+        generate_label_cmd(vm_cmd, asm_file)
 
     if cmd_type == "goto":
-        generate_goto_cmd(vm_cmd, func_name, asm_file)
+        generate_goto_cmd(vm_cmd, asm_file)
 
     if cmd_type == "if-goto":
-        generate_if_goto_cmd(vm_cmd, func_name, asm_file)
+        generate_if_goto_cmd(vm_cmd, asm_file)
 
     if cmd_type == "function":
         generate_function_cmd(vm_cmd, asm_file)
@@ -232,12 +248,20 @@ def generate_restore_command(asm_file, seg_name, seg_index):
 
 
 def generate_return_cmd(asm_file):
+    # global g_func_name_stack
+    # global g_curr_func
     asm_file.write(RETURN_ASM_1 + NEW_LINE)
     generate_restore_command(asm_file, "THAT", 1)
     generate_restore_command(asm_file, "THIS", 2)
     generate_restore_command(asm_file, "ARG", 3)
     generate_restore_command(asm_file, "LCL", 4)
     asm_file.write(RETURN_ASM_2 + NEW_LINE)  # goto retAddr = *R14
+    # print(g_func_name_stack)
+    # g_func_name_stack.pop()
+    # if not g_func_name_stack:
+    #     g_curr_func = None
+    # else:
+    #     g_curr_func = g_func_name_stack[-1]
 
 
 def remove_comments_and_spaces(segment):
@@ -303,7 +327,11 @@ def vm_translator(vm_path, asm_file):
 
 
 def generate_sys_init(asm_file):
+    asm_file.write("//#//#// SYS.INIT" + NEW_LINE)
     asm_file.write(SYS_INIT_1 + NEW_LINE)
+    vm_cmd = ["call", "Sys.init", 0]
+    asm_file.write("//#// CALL SYS.INIT" + NEW_LINE)
+    generate_call_cmd(vm_cmd, asm_file)
 
 
 if __name__ == "__main__":
@@ -312,6 +340,7 @@ if __name__ == "__main__":
     if os.path.isfile(vm_path_input):
         asm_path = vm_path_input.replace(VM_SUFFIX, ASM_SUFFIX)
         asm_file = open(asm_path, WRITE_MODE)
+        generate_sys_init(asm_file)
         vm_translator(vm_path_input, asm_file)
         asm_file.close()
 
@@ -320,6 +349,7 @@ if __name__ == "__main__":
         asm_file_name = os.path.basename(vm_path_input)
         asm_path = os.path.join(vm_path_input, asm_file_name+ASM_SUFFIX)
         asm_file = open(asm_path, WRITE_MODE)
+        generate_sys_init(asm_file)
         for filename in os.listdir(vm_path_input):
             if filename.endswith(VM_SUFFIX):
                 # Write a comment with file name
