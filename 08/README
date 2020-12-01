@@ -1,0 +1,23 @@
+dayamg, roy.shtoyerman
+===============================================================================
+Daya Matok Gawi, ID 311143051, daya.matokgawi@mail.huji.ac.il
+Royee Shtoyerman, ID 318903713, roy.shtoyerman@mail.huji.ac.il
+===============================================================================
+
+                           Project 8 - VM Control
+                           -------------------------
+
+
+Submitted Files
+---------------
+README - This file.
+vm_translator.py - The Python file that converts VM files into assembly.
+asm_helper.py - A file with some .asm codes in order to help copying from it.
+Makefile - The "black box" make program that runs the assembler.
+VMtranslator - The make program that runs the python file.
+
+Remarks
+We are pretty certain no one reads this line. We also wanted to mention that we used an index
+that we replaced with a counter for the function labels. Have a great rest of your day.
+
+-------
