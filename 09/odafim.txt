@@ -1,0 +1,16 @@
+		var SnakeLink firstLink, link;
+		var int i, firstXloc, firstYloc, otherXloc, otherYloc;
+		let firstLink = snakeLinksArr[0];
+		let firstXloc = firstLink.xLocGetter();
+		let firstYloc = firstLink.yLocGetter();
+		let i = 1;
+		while (i < linksNumber){
+			let link = snakeLinksArr[i];
+			let otherXloc = link.xLocGetter();
+			let otherYloc = link.yLocGetter();
+			if ((firstXloc = otherXloc)&(firstYloc = otherYloc)){
+				return true;
+			}
+			let i = i + 1;
+		}
+		return false;

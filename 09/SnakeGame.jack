@@ -60,7 +60,7 @@ class SnakeGame {
       var char key;  // the key currently pressed by the user
       var boolean exit;
       let exit = false;
-      
+
       while (~exit) {
          // waits for a key to be pressed
          while (key = 0) {
@@ -83,8 +83,8 @@ class SnakeGame {
    }
 
 
-   ///** Generates a pseudo-random number from 0 to the given maximum number, using some random variable helper **///
-   ///**  ...in order to make sure that we will eventually go through every number possible **///
+   /** Generates a pseudo-random number from 0 to the given maximum number, using some random variable helper **/
+   ///  ...in order to make sure that we will eventually go through every number possible ///
    method int generatePseudoRandom(int n, int randVar) {
        var int rand3;
        var int rand7;
@@ -102,22 +102,47 @@ class SnakeGame {
        return mod(tempNum, n);
     }
 
-      /** Modulo operation
+   /** Modulo operation
    function int mod(int x, int y) {
 	   var int division;
 	   let division = x/y;
 	   return x-(y*division);
    }*/
 
-   ///** checks if the given square is empty **///
-   method boolean checkIfEmpty(int xCoordinate, int yCoordinate){
 
+   ///** gets the coordinates (x,y) of a random empty square in the 16 * 8 square grid *///
+   method Array getRandomEmptySquare() {
 
+      var int xOffset; /// an offset for x - a value to add for the rand var, so we never miss a square, if exists
+      var int yOffset; /// an offset for y
+      let xOffset = 0;
+      let yOffset = 0;
+
+      var int xRandVal;  /// x-pixel coord (number) of a square = 32 * (rand number between 0 and 15)
+      var int yRandVal;  /// x-pixel coord (number) of a square = 32 * (rand number between 0 and 7)
+      let xRandVal = 32 * generatePseudoRandom(15, xOffset);
+      let yRandVal = 32 * generatePseudoRandom(7, yOffset);
+
+      while ((xOffset < 16) & (~(snake.checkIfEmpty(xRandVal, yRandVal)))) {
+            let yOffset = 0;
+            while ((yOffset < 8) & (~(snake.checkIfEmpty(xRandVal, yRandVal)))) {
+               let yRandVal = 32 * generatePseudoRandom(7, yOffset);
+               let yOffset = yOffset + 1
+            }
+
+            let xOffset = xOffset + 1
+            let xRandVal = 32 * generatePseudoRandom(15, xOffset);
+        }
+
+     var Array coorArray;  /// The x-y coordinate of the empty square to return
+     coorArray = Array.new(2);
+     coorArray[0] = xRandVal;
+     coorArray[1] = yRandVal;
+
+     return coorArray;
    }
 
 
-   ///** gets the coordinates (x,y) of a random empty square in the 16 * 8 square grid *///
-   method Array getRandomEmptySquare()
 
 
 }

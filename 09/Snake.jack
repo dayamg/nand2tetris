@@ -5,9 +5,8 @@ class Snake{
    field int linksMuxNumber;
    field int linksNumber;
    field int linkSize;
-   
 
-   /** Constructs a new Snake. */
+     /** Constructs a new Snake. */
    constructor Snake new() {
       let linksMuxNumber = 130; // num of snake links the screen can hold.
 	  let linksNumber = 3;
@@ -105,23 +104,35 @@ class Snake{
 	
 	/** Check if the snake head link hit the rest of its links, return true or false accordingly. */
 	method boolean hitItself(){
-		var SnakeLink firstLink, link;
-		var int i, firstXloc, firstYloc, otherXloc, otherYloc; 
+        var int firstXloc, firstYloc;
 		let firstLink = snakeLinksArr[0];
 		let firstXloc = firstLink.xLocGetter();
 		let firstYloc = firstLink.yLocGetter();
-		let i = 1;
-		while (i < linksNumber){
-			let link = snakeLinksArr[i];
+		return checkIfEmpty(firstXloc, firstYloc);
+	}
+
+    ///** checks if the given square (in format {0-15,0-7}) is empty **///
+   method boolean checkIfEmpty(int givenXLock, int givenYLock){
+
+      var SnakeLink link;
+      var int i, otherXloc, otherYloc;
+	  let i = 1;  /// the head block is considered empty, so i = 1.
+      while (i < linksNumber) {
+      	    let link = snakeLinksArr[i];
 			let otherXloc = link.xLocGetter();
 			let otherYloc = link.yLocGetter();
-			if ((firstXloc = otherXloc)&(firstYloc = otherYloc)){
+			if ((givenXLock = otherXloc)&(givenYLock = otherYloc)){
 				return true;
 			}
 			let i = i + 1;
 		}
 		return false;
-	}
+      }
+
+      }
+
+
+   }
    
 }
 
