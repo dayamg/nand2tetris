@@ -47,11 +47,65 @@ class SnakeLink {
 
    /** Draws the SnakeLink on the screen. */
    method void draw() {
-	  do Screen.setColor(true);
-	  do Screen.drawRectangle(xLoc, yLoc, xLoc + size-1, yLoc + size-1);
-	  return;
+	   	var int location;
+		let location = ((32*yLoc) + (xLoc/16));
+		do SnakeLink.draw16TiltLeft(location);
+		let location = ((32*yLoc) + ((xLoc+16)/16));
+		do SnakeLink.draw16TiltLeft(location);
+		let location = ((32*(yLoc+16)) + (xLoc/16));
+		do SnakeLink.draw16TiltRight(location);		
+		let location = ((32*(yLoc+16)) + ((xLoc+16)/16));
+		do SnakeLink.draw16TiltRight(location);	
+		return;		
+   }		
+   
+   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+   function void draw16TiltRight(int location) {
+		var int memAddress;	
+		let memAddress = 16384 + location;
+		do Memory.poke(memAddress + 0, 3855);
+		do Memory.poke(memAddress + 32, -30841);
+		do Memory.poke(memAddress + 64, -15421);
+		do Memory.poke(memAddress + 96, -7711);
+		do Memory.poke(memAddress + 128, -3856);
+		do Memory.poke(memAddress + 160, 30840);
+		do Memory.poke(memAddress + 192, 15420);
+		do Memory.poke(memAddress + 224, 7710);
+		do Memory.poke(memAddress + 256, 3855);
+		do Memory.poke(memAddress + 288, -30841);
+		do Memory.poke(memAddress + 320, -15421);
+		do Memory.poke(memAddress + 352, -7711);
+		do Memory.poke(memAddress + 384, -3856);
+		do Memory.poke(memAddress + 416, 30840);
+		do Memory.poke(memAddress + 448, 15420);
+		do Memory.poke(memAddress + 480, 7710);
+		return;
    }
 
+ /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt left lines. */
+   function void draw16TiltLeft(int location) {
+		var int memAddress;	
+		let memAddress = 16384 + location;
+		do Memory.poke(memAddress + 0, 7710);
+		do Memory.poke(memAddress + 32, 15420);
+		do Memory.poke(memAddress + 64, 30840);
+		do Memory.poke(memAddress + 96, -3856);
+		do Memory.poke(memAddress + 128, -7711);
+		do Memory.poke(memAddress + 160, -15421);
+		do Memory.poke(memAddress + 192, -30841);
+		do Memory.poke(memAddress + 224, 3855);
+		do Memory.poke(memAddress + 256, 7710);
+		do Memory.poke(memAddress + 288, 15420);
+		do Memory.poke(memAddress + 320, 30840);
+		do Memory.poke(memAddress + 352, -3856);
+		do Memory.poke(memAddress + 384, -7711);
+		do Memory.poke(memAddress + 416, -15421);
+		do Memory.poke(memAddress + 448, -30841);
+		do Memory.poke(memAddress + 480, 3855);
+		return;
+   }
+
+   
    /** Erases the SnakeLink from the screen. */
    method void erase() {
 	  do Screen.setColor(false);
@@ -125,14 +179,6 @@ class SnakeLink {
 		}
 		do moveTo(newXloc, yLoc);
 		return;
-   }
-   
-   /** Modulo operation
-   function int mod(int x, int y) {
-	   var int division;
-	   let division = x/y;
-	   return x-(y*division);
-   }*/
-	   
+   }   
    
 }

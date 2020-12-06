@@ -9,7 +9,7 @@ class Snake{
 
    /** Constructs a new Snake. */
    constructor Snake new() {
-      let linksMuxNumber = 128; // num of snake links the screen can hold.
+      let linksMuxNumber = 130; // num of snake links the screen can hold.
 	  let linksNumber = 3;
 	  let linkSize = 32;
 	  let snakeLinksArr = Array.new(linksMuxNumber); // constructs the array
@@ -88,9 +88,40 @@ class Snake{
 		}
 		return;
    }
- 
+	
+	/** Grow the snake by one link at the end. */
+	method void grow(){
+		var int lastLinkXLoc, lastLinkYLoc;
+		var SnakeLink lastLink;
+		if ((linksNumber+1) < linksMuxNumber){
+			let lastLink = snakeLinksArr[(linksNumber-1)];
+			let lastLinkXLoc = lastLink.xLocGetter();
+			let lastLinkYLoc = lastLink.yLocGetter();
+			let snakeLinksArr[linksNumber] = SnakeLink.new(lastLinkXLoc, lastLinkYLoc, linkSize);
+			let linksNumber = linksNumber + 1; 
+		}	
+		return;
+	}
+	
+	/** Check if the snake head link hit the rest of its links, return true or false accordingly. */
+	method boolean hitItself(){
+		var SnakeLink firstLink, link;
+		var int i, firstXloc, firstYloc, otherXloc, otherYloc; 
+		let firstLink = snakeLinksArr[0];
+		let firstXloc = firstLink.xLocGetter();
+		let firstYloc = firstLink.yLocGetter();
+		let i = 1;
+		while (i < linksNumber){
+			let link = snakeLinksArr[i];
+			let otherXloc = link.xLocGetter();
+			let otherYloc = link.yLocGetter();
+			if ((firstXloc = otherXloc)&(firstYloc = otherYloc)){
+				return true;
+			}
+			let i = i + 1;
+		}
+		return false;
+	}
    
 }
-
-
 
