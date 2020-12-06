@@ -1,0 +1,24 @@
+
+/** Initializes a new snake game and starts running it. */
+class Main {
+    function void main() {
+        var SnakeGame game;
+        let game = SnakeGame.new();
+		 
+		do Output.println(); 
+		do Output.println(); 
+		do Output.println(); 
+		do Output.println(); 
+		do Output.println(); 
+		
+		do Output.printString("Snake!"); 
+		do Output.println(); 
+		do Output.printString("Use the arrows to move and eat the food (and this text)"); 
+		do Output.println(); 
+		do Output.printString("be careful not to hit yourself :)"); 
+        
+		do game.run();
+        do game.dispose();
+        return;
+    }
+}

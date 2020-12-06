@@ -1,0 +1,138 @@
+
+
+/** Implements a graphical snakeLink. */
+class SnakeLink {
+
+   field int xLoc, yLoc; // screen location of the snakeLink's top-left corner
+   field int size; // length of this snakeLink, in pixels
+   field boolean isHead; // indicates in snake link is the head, for drowing purpose.
+
+   /** Constructs a new snakeLink with a given location and size. */
+   constructor SnakeLink new(int Ax, int Ay, int Asize) {
+	  let xLoc = Ax;
+	  let yLoc = Ay;
+	  let size = Asize;
+	  do draw();
+	  return this;
+   }
+
+  /** xLoc getter */
+   method int xLocGetter() {
+	  return xLoc;
+   }
+   
+  /** yLoc getter */
+   method int yLocGetter() {
+	  return yLoc;
+   }  
+  
+  /** xLoc setter */
+   method void xLocSetter(int val) {
+	  let xLoc = val;
+	  return;
+   }
+  
+	/** yLoc setter */
+   method void yLocSetter(int val) {
+	  let yLoc = val;
+	  return;
+   }
+  
+ 
+   /** Disposes this SnakeLink. */
+   method void dispose() {
+	  do Memory.deAlloc(this);
+	  return;
+   }
+
+   /** Draws the SnakeLink on the screen. */
+   method void draw() {
+	  do Screen.setColor(true);
+	  do Screen.drawRectangle(xLoc, yLoc, xLoc + size-1, yLoc + size-1);
+	  return;
+   }
+
+   /** Erases the SnakeLink from the screen. */
+   method void erase() {
+	  do Screen.setColor(false);
+	  do Screen.drawRectangle(xLoc, yLoc, xLoc + size-1, yLoc + size-1);
+	  return;
+   }
+   
+   /** Move the SnakeLink to given location on the screen. */
+   method void moveTo(int NewXLoc, int NewYLoc) {
+	  let xLoc = NewXLoc;
+	  let yLoc = NewYLoc;
+	  do draw();
+	  return;
+   }
+   
+   /** Moves the SnakeLink up by a link. */
+	method void moveUp() {
+		// drow the link up.
+		var int newYloc;
+		let newYloc = yLoc - size;
+		if (newYloc < 0) {
+			let newYloc = (newYloc + 256);
+		}
+		if (newYloc > (256 - size)) {
+			let newYloc = (newYloc - 256);
+		}
+		do moveTo(xLoc, newYloc);
+		return;
+	}
+
+   /** Moves the SnakeLink down by a link. */
+   method void moveDown() {
+		// drow the link down.
+		var int newYloc;
+		let newYloc = yLoc + size;
+		if (newYloc < 0) {
+			let newYloc = (newYloc + 256);
+		}
+		if (newYloc > (256 - size)) {
+			let newYloc = (newYloc - 256);
+		}
+		do moveTo(xLoc, newYloc);
+		return;
+   }
+
+   /** Moves the SnakeLink left by a link. */
+   method void moveLeft() {
+		// drow the link left.
+		var int newXloc;
+		let newXloc = xLoc - size;
+		if (newXloc < 0) {
+			let newXloc = (newXloc + 512);
+		}
+		if (newXloc > (512 - size)) {
+			let newXloc = (newXloc - 512);
+		}
+		do moveTo(newXloc, yLoc);
+		return;
+   }
+
+   /** Moves the SnakeLink right by a link. */
+   method void moveRight() {
+		// drow the link right.
+		var int newXloc;
+		let newXloc = xLoc + size;
+		if (newXloc < 0) {
+			let newXloc = (newXloc + 512);
+		}
+		if (newXloc > (512 - size)) {
+			let newXloc = (newXloc - 512);
+		}
+		do moveTo(newXloc, yLoc);
+		return;
+   }
+   
+   /** Modulo operation
+   function int mod(int x, int y) {
+	   var int division;
+	   let division = x/y;
+	   return x-(y*division);
+   }*/
+	   
+   
+}
