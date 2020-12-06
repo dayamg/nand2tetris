@@ -1,0 +1,65 @@
+class Food {
+    field int x_coordinate
+    field int y_coordinate
+
+
+   /** Constructs a new food piece with a given location and size. */
+   constructor SnakeLink new(int Ax, int Ay) {
+	  let x_coordinate = Ax;
+	  let y_coordinate = Ay;
+	  do draw();
+	  return this;
+   }
+
+
+  /** xLoc getter */
+   method int xCoordinateGet() {
+	  return x_coordinate;
+   }
+
+  /** yLoc getter */
+   method int yCoordinateGet() {
+	  return y_coordinate;
+   }
+
+   /** Disposes this Food after using. It's organic garbage so it's okay to throw it. */
+   method void dispose() {
+	  do Memory.deAlloc(this);
+	  return;
+   }
+
+   //** Draws the food; it is, in this case, the Forbidden fruit (since it's a snake.) **//
+   function void draw() {
+    var int location;
+	let location = ((32*yLoc) + (xLoc/16));
+    var int memAddress;
+
+	let memAddress = 16384 + location;
+	do Memory.poke(memAddress + 0, 3120);
+	do Memory.poke(memAddress + 32, 7728);
+	do Memory.poke(memAddress + 64, 3936);
+	do Memory.poke(memAddress + 96, 448);
+	do Memory.poke(memAddress + 128, 4064);
+	do Memory.poke(memAddress + 160, 7224);
+	do Memory.poke(memAddress + 192, 14364);
+	do Memory.poke(memAddress + 224, 12492);
+	do Memory.poke(memAddress + 256, 28774);
+	do Memory.poke(memAddress + 288, 28710);
+	do Memory.poke(memAddress + 320, 28678);
+	do Memory.poke(memAddress + 352, 28678);
+	do Memory.poke(memAddress + 384, 30726);
+	do Memory.poke(memAddress + 416, 31756);
+	do Memory.poke(memAddress + 448, 16188);
+	do Memory.poke(memAddress + 480, 8184);
+	return;
+	}
+
+   /** Erases the food from the screen. */
+   method void erase() {
+	  do Screen.setColor(false);
+	  do Screen.drawRectangle(x_coordinate, y_coordinate, x_coordinate + 15, y_coordinate + 15);
+	  return;
+   }
+
+
+}

@@ -1,13 +1,24 @@
 
 class SnakeGame {
-   field Snake snake; // the snake of this game
-   field int direction; // the snake's current direction: 
-                        // 0=none, 1=up, 2=down, 3=left, 4=right
+   field int FOOD_INCREMENT;
+   let FOOD_INCREMENT = 20; /// const. var. for delay between appearance of two foods
+   field int moveCounter;  /// counts the moves, so every 20 moves there will appear a new food
+   field boolean isThereFoodNow;   /// a boolean variable for tracking existence of food on the board
 
-   /** Constructs a new snake Game. */
+   field Snake snake; // the snek of this game
+   field int direction; // the snek's current direction:
+                        // 0=none, 1=up, 2=down, 3=left, 4=right
+   field int prevDirection; // the snek's previous direction:
+
+
+   /** Constructs a new snek Game. */
    constructor SnakeGame new() {
-      let snake = Snake.new();
-      let direction = 0;  // initial state is no movement
+      let snake = Snake.new();  /// Our new child-snek is born. Mazal Tov.
+      let direction = 0;  /// initial state is no movement
+      let prevDirection = 0;  /// initial state is no movement
+
+      let moveCounter = 0;  /// move counter is initial 0
+      let isThereFoodNow = 0;  /// in the beginning, earth was formless and empty, no food. snek hungry.
       return this;
    }
 
@@ -20,11 +31,27 @@ class SnakeGame {
 
    /** Moves the snake in the current direction. */
    method void moveSnake() {
-      if (direction = 1) { do snake.moveUp(); }
-      if (direction = 2) { do snake.moveDown(); }
-      if (direction = 3) { do snake.moveLeft(); }
-      if (direction = 4) { do snake.moveRight(); }
+      if (direction = 1 & ~(prevDirection = 2)) /// Do not allow going backwards {
+        do snake.moveUp();
+        let prevDirection = 1;
+       }
+      if (direction = 2 & ~(prevDirection = 1)) {
+           do snake.moveDown();
+           let prevDirection = 2;
+       }
+      if (direction = 3 & ~(prevDirection = 4)) {
+        do snake.moveLeft();
+        let prevDirection = 3;
+      }
+      if (direction = 4 & ~(prevDirection = 3) {
+        do snake.moveRight();
+        let prevDirection = 4
+      }
+      else {
+      let direction = prevDirection /// if there was no movement, restore the previous value of direction
+      }
       do Sys.wait(80);  // delays the next movement
+      let moveCounter = moveCounter + 1;
       return;
    }
 
@@ -54,6 +81,45 @@ class SnakeGame {
      } // while
      return;
    }
+
+
+   ///** Generates a pseudo-random number from 0 to the given maximum number, using some random variable helper **///
+   ///**  ...in order to make sure that we will eventually go through every number possible **///
+   method int generatePseudoRandom(int n, int randVar) {
+       var int rand3;
+       var int rand7;
+       let rand3 = mod(moveCounter, 3)  ///rand3 is a pseudo-random 3-remainder
+       let rand7 = mod(moveCounter, 7)  ///rand3 is a pseudo-random 7-remainder
+
+       var int nThirds;
+       var int nSevenths;
+       let nThirds = (n*rand3)/3;
+       let nSeventh = (n*rand7)/7;
+
+       var int tempNum;
+       let tempNum = (nThirds + nSeventh) + randVar;
+
+       return mod(tempNum, n);
+    }
+
+      /** Modulo operation
+   function int mod(int x, int y) {
+	   var int division;
+	   let division = x/y;
+	   return x-(y*division);
+   }*/
+
+   ///** checks if the given square is empty **///
+   method boolean checkIfEmpty(int xCoordinate, int yCoordinate){
+
+
+   }
+
+
+   ///** gets the coordinates (x,y) of a random empty square in the 16 * 8 square grid *///
+   method Array getRandomEmptySquare()
+
+
 }
 
 
