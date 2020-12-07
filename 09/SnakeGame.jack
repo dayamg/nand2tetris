@@ -66,7 +66,7 @@ class SnakeGame {
       }
       do Sys.wait(80);  // delays the next movement
 
-      if ((~(isThereFoodNow)) & (moveCounter=FOOD_INCREMENT)) { /// Every FOOD_INCREMENT moves, create food
+      if (moveCounter = FOOD_INCREMENT) { /// Every FOOD_INCREMENT moves, create food
              do createFood();
              let moveCounter=0;
       }
@@ -78,8 +78,10 @@ class SnakeGame {
    }
 
    method void createFood() {
-        var int xRandVal, yRandVal;
-        var Array randValArr;
+      var int xRandVal, yRandVal;
+      var Array randValArr;
+
+      if (~(isThereFoodNow)){
         let randValArr = getRandomEmptySquare();
         let xRandVal = randValArr[0];
         let yRandVal = randValArr[1];
@@ -87,8 +89,8 @@ class SnakeGame {
         let food = Food.new(xRandVal, yRandVal); /// keep the new food created
         let isThereFoodNow = true;
         do snake.grow();
-
-        return;
+      }
+       return;
    }
 
    method void checkIfFoodEaten() {
@@ -145,8 +147,8 @@ class SnakeGame {
        return n;
     }
 
-   /** Modulo operation
-   function int mod(int x, int y) {
+   /** Modulo operation **/
+   method int mod(int x, int y) {
 	   var int division;
 	   let division = x/y;
 	   return x-(y*division);
@@ -156,11 +158,11 @@ class SnakeGame {
    ///** gets the coordinates (x,y) of a random empty square in the 16 * 8 square grid *///
    method Array getRandomEmptySquare() {
 
-      var Array coorArray;  /// The x-y coordinate of the empty square to return
+    var Array coorArray;  /// The x-y coordinate of the empty square to return
 
      let coorArray = Array.new(2);
-     let coorArray[0] = 32;
-     let coorArray[1] = 32;
+     let coorArray[0] = mod(snake.getCounter()*snake.getCounter(), 16) * 32;
+     let coorArray[1] = mod(snake.getCounter()*3, 8) * 32;
 
      return coorArray;
    }

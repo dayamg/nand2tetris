@@ -5,12 +5,14 @@ class Snake{
    field int linksMuxNumber;
    field int linksNumber;
    field int linkSize;
+   field int counter;  /// random counter for generating pseudo-random numbers
 
      /** Constructs a new Snake. */
    constructor Snake new() {
       let linksMuxNumber = 130; // num of snake links the screen can hold.
 	  let linksNumber = 3;
 	  let linkSize = 32;
+	  let counter = 0;
 	  let snakeLinksArr = Array.new(linksMuxNumber); // constructs the array
       let snakeLinksArr[0] = SnakeLink.new(2*linkSize, 0, linkSize);
       let snakeLinksArr[1] = SnakeLink.new(linkSize, 0, linkSize);
@@ -39,6 +41,8 @@ class Snake{
 		do moveTail();
 		let link = snakeLinksArr[0];
 		do link.moveUp();
+		let counter = counter + 1;
+
 		return;
 	}
 
@@ -48,6 +52,8 @@ class Snake{
 		do moveTail();
 		let link = snakeLinksArr[0];
 		do link.moveDown();
+		let counter = counter + 1;
+
 		return;
    }
 
@@ -57,15 +63,19 @@ class Snake{
 		do moveTail();
 		let link = snakeLinksArr[0];
 		do link.moveLeft();
+        let counter = counter + 1;
+
 		return;
    }
 
    /** Moves the Snake right. */
    method void moveRight() {
 	    var SnakeLink link;
-		do moveTail();
+	    do moveTail();
 		let link = snakeLinksArr[0];
 		do link.moveRight();
+        let counter = counter + 1;
+
 		return;
    }
    
@@ -87,7 +97,12 @@ class Snake{
 		}
 		return;
    }
-	
+
+	/** Getter for the counter random variable **/
+	method int getCounter(){
+	    return counter;
+	}
+
 	/** Grow the snake by one link at the end. */
 	method void grow(){
 		var int lastLinkXLoc, lastLinkYLoc;
@@ -97,7 +112,8 @@ class Snake{
 			let lastLinkXLoc = lastLink.xLocGetter();
 			let lastLinkYLoc = lastLink.yLocGetter();
 			let snakeLinksArr[linksNumber] = SnakeLink.new(lastLinkXLoc, lastLinkYLoc, linkSize);
-			let linksNumber = linksNumber + 1; 
+			let linksNumber = linksNumber + 1;
+			let counter = counter + 1;
 		}	
 		return;
 	}
@@ -112,7 +128,7 @@ class Snake{
 		return checkIfEmpty(firstXloc, firstYloc);
 	}
 
-    ///** checks if the given square (in format {0-15,0-7}) is empty **///
+    ///** checks if the given square is empty **///
    method boolean checkIfEmpty(int givenXLock, int givenYLock){
 
       var SnakeLink link;
