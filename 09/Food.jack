@@ -4,7 +4,7 @@ class Food {
 
 
    /** Constructs a new food piece with a given location and size. */
-   constructor SnakeLink new(int Ax, int Ay) {
+   constructor Food new(int Ax, int Ay) {
 	  let x_coordinate = Ax;
 	  let y_coordinate = Ay;
 	  do draw();

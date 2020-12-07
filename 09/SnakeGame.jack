@@ -2,6 +2,10 @@
 class SnakeGame {
    field int FOOD_INCREMENT;
    let FOOD_INCREMENT = 20; /// const. var. for delay between appearance of two foods
+
+   field int SCORE_INCREMENT;
+   let SCORE_INCREMENT = 3;
+
    field int moveCounter;  /// counts the moves, so every 20 moves there will appear a new food
    field boolean isThereFoodNow;   /// a boolean variable for tracking existence of food on the board
 
@@ -9,6 +13,10 @@ class SnakeGame {
    field int direction; // the snek's current direction:
                         // 0=none, 1=up, 2=down, 3=left, 4=right
    field int prevDirection; // the snek's previous direction:
+
+   field Food food; /// current food in the game
+
+   field int score;
 
 
    /** Constructs a new snek Game. */
@@ -18,13 +26,17 @@ class SnakeGame {
       let prevDirection = 0;  /// initial state is no movement
 
       let moveCounter = 0;  /// move counter is initial 0
-      let isThereFoodNow = 0;  /// in the beginning, earth was formless and empty, no food. snek hungry.
+      let isThereFoodNow = false;  /// in the beginning, earth was formless and empty, no food. snek hungry.
+      let score = 0;
       return this;
    }
 
    /** Disposes this game. */
    method void dispose() {
       do snake.dispose();
+      if (isThereFoodNow) {
+        do food.dispose();
+      }
       do Memory.deAlloc(this);
       return;
    }
@@ -51,9 +63,46 @@ class SnakeGame {
       let direction = prevDirection /// if there was no movement, restore the previous value of direction
       }
       do Sys.wait(80);  // delays the next movement
+
+      if ((~(isThereFoodNow)) & (mod(moveCounter, FOOD_INCREMENT) = 0)) { /// Every FOOD_INCREMENT moves, create food
+             do createFood();
+      }
+
+      do checkIfFoodEaten();
+
       let moveCounter = moveCounter + 1;
       return;
    }
+
+   method void createFood() {
+        var int xRandVal, yRandVal;
+        var Array randValArr;
+        let randValArr = getRandomEmptySquare();
+        let xRandVal = randValArr[0];
+        let yRandVal = randValArr[1];
+
+        let food = Food.new(xRandVal, yRandVal); /// keep the new food created
+        let isThereFoodNow = true;
+
+        return;
+   }
+
+   method void checkIfFoodEaten() {
+        if (isThereFoodNow){
+             var int xFoodCoor, yFoodCoor;
+             let xFoodCoor = food.xCoordinateGet();
+             let yFoodCoor = food.yCoordinateGet();
+
+             if (~(snake.checkIfEmpty(xFoodCoor, yFoodCoor))){
+                  do food.dispose();
+                  let isThereFoodNow = false;
+                  let score = score + SCORE_INCREMENT;
+              }
+        }
+
+        return;
+   }
+
 
    /** Runs the game: handles the user's inputs and moves the snake accordingly */
    method void run() {
@@ -73,12 +122,14 @@ class SnakeGame {
          if (key = 130) { let direction = 3; }   // left arrow
          if (key = 132) { let direction = 4; }   // right arrow
 
+
          // waits for the key to be released
          while (~(key = 0)) {
             let key = Keyboard.keyPressed();
             do moveSnake();
          }
-     } // while
+
+      }
      return;
    }
 
