@@ -128,6 +128,7 @@ class Snake{
 		return;
 	}
 	
+	/** check if the given food (by coordinates) is eaten by snake, return true or false. */
 	method boolean doesEatFood(int xLocFood, int yLocFood){
 		var int firstXloc, firstYloc;
         var SnakeLink firstLink;
