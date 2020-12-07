@@ -105,6 +105,7 @@ class Snake{
 	/** Check if the snake head link hit the rest of its links, return true or false accordingly. */
 	method boolean hitItself(){
         var int firstXloc, firstYloc;
+        var SnakeLink firstLink;
 		let firstLink = snakeLinksArr[0];
 		let firstXloc = firstLink.xLocGetter();
 		let firstYloc = firstLink.yLocGetter();
@@ -129,10 +130,6 @@ class Snake{
 		return false;
       }
 
-      }
-
-
-   }
    
 }
 

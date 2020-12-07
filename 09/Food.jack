@@ -1,13 +1,13 @@
 class Food {
-    field int x_coordinate
-    field int y_coordinate
+    field int x_coordinate;
+    field int y_coordinate;
 
 
    /** Constructs a new food piece with a given location and size. */
    constructor Food new(int Ax, int Ay) {
 	  let x_coordinate = Ax;
 	  let y_coordinate = Ay;
-	  do draw();
+	  do draw(x_coordinate, y_coordinate);
 	  return this;
    }
 
@@ -29,12 +29,12 @@ class Food {
    }
 
    //** Draws the food; it is, in this case, the Forbidden fruit (since it's a snake.) **//
-   function void draw() {
+   function void draw(int x_coordinate, int y_coordinate) {
         var int location;
-	    let location = ((32*yLoc) + (xLoc/16));
+	    let location = (32*y_coordinate) + (x_coordinate/16);
         var int scnAddres;
-
 	    let scnAddres = 16384 + location;
+
         do Memory.poke(scnAddres + 0, -1);
         do Memory.poke(scnAddres + 32, -1);
         do Memory.poke(scnAddres + 64, -1);
