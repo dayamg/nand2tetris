@@ -45,19 +45,19 @@ class SnakeGame {
 
    /** Moves the snake in the current direction. */
    method void moveSnake() {
-      if (direction = 1 & ~(prevDirection = 2)) {
+      if ((direction = 1) & (~(prevDirection = 2))) {
         do snake.moveUp(); /// Do not allow going backwards
         let prevDirection = 1;
        }
-      if (direction = 2 & ~(prevDirection = 1)) {
+      if ((direction = 2) & (~(prevDirection = 1))) {
            do snake.moveDown();
            let prevDirection = 2;
        }
-      if (direction = 3 & ~(prevDirection = 4)) {
+      if ((direction = 3) & (~(prevDirection = 4))) {
         do snake.moveLeft();
         let prevDirection = 3;
       }
-      if (direction = 4 & ~(prevDirection = 3)) {
+      if ((direction = 4) & (~(prevDirection = 3))) {
         do snake.moveRight();
         let prevDirection = 4;
       }
@@ -69,9 +69,10 @@ class SnakeGame {
 
       if (~(isThereFoodNow)){ // no food in game
 		let moveCounter = moveCounter + 1;
-		if (moveCounter = FOOD_INCREMENT) { /// Every FOOD_INCREMENT moves, create food if there is no food in game
+		if ((SnakeGame.mod(moveCounter, FOOD_INCREMENT)) = 0) {
+		/// Every FOOD_INCREMENT moves, create food if there is no food in game
             do createFood();
-            let moveCounter=0;
+            let moveCounter = 0;
 		}
 	  }
 	  else {
@@ -106,7 +107,7 @@ class SnakeGame {
             let xFoodCoor = food.xCoordinateGet();
             let yFoodCoor = food.yCoordinateGet();
 
-            if (snake.doesEatFood(xFoodCoor, yFoodCoor)){
+            if (snake.checkIfEmpty(xFoodCoor, yFoodCoor)){
                 do food.dispose();
 				do snake.grow();
                 let isThereFoodNow = false;
@@ -148,14 +149,14 @@ class SnakeGame {
    }
 
 
-   /** Generates a pseudo-random number from 0 to the given maximum number, using some random variable helper **/
+   /** Generates a pseudo-random number from 0 to the n - 1, using some offset as helper **/
    ///  ...in order to make sure that we will eventually go through every number possible ///
-   method int generatePseudoRandom(int n, int randVar) {
-       return n;
+   method int generatePseudoRandom(int n, int offSet) {
+       return SnakeGame.mod((snake.getCounter()*snake.getCounter()) + offSet, n);
     }
 
    /** Modulo operation **/
-   method int mod(int x, int y) {
+   function int mod(int x, int y) {
 	   var int division;
 	   let division = x/y;
 	   return x-(y*division);
@@ -165,11 +166,30 @@ class SnakeGame {
    ///** gets the coordinates (x,y) of a random empty square in the 16 * 8 square grid *///
    method Array getRandomEmptySquare() {
 
+    var int xRandCoor, yRandCoor, xOffset, yOffset;
     var Array coorArray;  /// The x-y coordinate of the empty square to return
 
+
+      let xOffset = 0;
+      let yOffset = 0;
+
+      let xRandCoor = 32 * generatePseudoRandom(16, xOffset);
+      let yRandCoor = 32 * generatePseudoRandom(8, yOffset);
+
+       while ((~(snake.checkIfEmpty(xRandCoor, yRandCoor))) & (xOffset < 0)) {
+            let yOffset = 0;
+            while ((~(snake.checkIfEmpty(xRandCoor, yRandCoor))) & (yOffset < 0)) {
+               let yRandCoor = 32 * generatePseudoRandom(8, yOffset);
+               let yOffset = yOffset + 1;
+            }
+
+            let xOffset = xOffset + 1;
+            let xRandCoor = 32 * generatePseudoRandom(16, xOffset);
+        }
+
      let coorArray = Array.new(2);
-     let coorArray[0] = mod(snake.getCounter()*snake.getCounter(), 16) * 32;
-     let coorArray[1] = mod(snake.getCounter()*3, 8) * 32;
+     let coorArray[0] = xRandCoor;
+     let coorArray[1] = yRandCoor;
 
      return coorArray;
    }
