@@ -5,12 +5,12 @@ class Main {
         var SnakeGame game;
         var int score;
         let game = SnakeGame.new();
-		 
+
 		do Output.println(); 
 		do Output.println(); 
 		do Output.println(); 
 		do Output.println(); 
-		do Output.println(); 
+		do Output.println();
 		
 		do Output.printString("Snake!");
 		do Output.println();
@@ -25,13 +25,16 @@ class Main {
     }
 
       function void printScore(int score) {
-          do Screen.setColor(true);
-          do Screen.drawRectangle(0, 0, 511, 255);
-          do Screen.setColor(false);
-          do Output.printString("Game over!");
+          var String gameOver;
+          let gameOver = "GAME OVER";
+
+          do Screen.clearScreen();
+          do Output.printString(gameOver);
           do Output.println();
           do Output.printString("Your Score: ");
           do Output.printInt(score);
+
+          do gameOver.dispose();
           return;
    }
 }
