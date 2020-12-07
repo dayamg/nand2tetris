@@ -27,7 +27,7 @@ class SnakeGame {
       let isThereFoodNow = false;  /// in the beginning, earth was formless and empty, no food. snek hungry.
       let score = 0;
 
-      let FOOD_INCREMENT = 20; /// const. var. for delay between appearance of two foods
+      let FOOD_INCREMENT = 50; /// const. var. for delay between appearance of two foods
       let SCORE_INCREMENT = 3;
 
       return this;
@@ -66,8 +66,9 @@ class SnakeGame {
       }
       do Sys.wait(80);  // delays the next movement
 
-      if ((~(isThereFoodNow)) & (mod(moveCounter, FOOD_INCREMENT) = 0)) { /// Every FOOD_INCREMENT moves, create food
+      if ((~(isThereFoodNow)) & (moveCounter=FOOD_INCREMENT)) { /// Every FOOD_INCREMENT moves, create food
              do createFood();
+             let moveCounter=0;
       }
 
       do checkIfFoodEaten();
@@ -85,6 +86,7 @@ class SnakeGame {
 
         let food = Food.new(xRandVal, yRandVal); /// keep the new food created
         let isThereFoodNow = true;
+        do snake.grow();
 
         return;
    }
@@ -140,20 +142,7 @@ class SnakeGame {
    /** Generates a pseudo-random number from 0 to the given maximum number, using some random variable helper **/
    ///  ...in order to make sure that we will eventually go through every number possible ///
    method int generatePseudoRandom(int n, int randVar) {
-       var int rand3;
-       var int rand7;
-       let rand3 = mod(moveCounter, 3);  ///rand3 is a pseudo-random 3-remainder
-       let rand7 = mod(moveCounter, 7);  ///rand3 is a pseudo-random 7-remainder
-
-       var int nThirds;
-       var int nSevenths;
-       let nThirds = (n*rand3)/3;
-       let nSeventh = (n*rand7)/7;
-
-       var int tempNum;
-       let tempNum = (nThirds + nSeventh) + randVar;
-
-       return mod(tempNum, n);
+       return n;
     }
 
    /** Modulo operation
@@ -167,30 +156,11 @@ class SnakeGame {
    ///** gets the coordinates (x,y) of a random empty square in the 16 * 8 square grid *///
    method Array getRandomEmptySquare() {
 
-      var int xOffset; /// an offset for x - a value to add for the rand var, so we never miss a square, if exists
-      var int yOffset; /// an offset for y
-      let xOffset = 0;
-      let yOffset = 0;
-      var int xRandVal;  /// x-pixel coord (number) of a square = 32 * (rand number between 0 and 15)
-      var int yRandVal;  /// x-pixel coord (number) of a square = 32 * (rand number between 0 and 7)
-      let xRandVal = 32 * generatePseudoRandom(15, xOffset);
-      let yRandVal = 32 * generatePseudoRandom(7, yOffset);
+      var Array coorArray;  /// The x-y coordinate of the empty square to return
 
-      while ((xOffset < 16) & (~(snake.checkIfEmpty(xRandVal, yRandVal)))) {
-            let yOffset = 0;
-            while ((yOffset < 8) & (~(snake.checkIfEmpty(xRandVal, yRandVal)))) {
-               let yRandVal = 32 * generatePseudoRandom(7, yOffset);
-               let yOffset = yOffset + 1
-            }
-
-            let xOffset = xOffset + 1
-            let xRandVal = 32 * generatePseudoRandom(15, xOffset);
-        }
-
-     var Array coorArray;  /// The x-y coordinate of the empty square to return
-     coorArray = Array.new(2);
-     coorArray[0] = xRandVal;
-     coorArray[1] = yRandVal;
+     let coorArray = Array.new(2);
+     let coorArray[0] = 32;
+     let coorArray[1] = 32;
 
      return coorArray;
    }

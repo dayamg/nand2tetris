@@ -14,3 +14,44 @@
 			let i = i + 1;
 		}
 		return false;
+
+___________________________________________________________
+       var int nThirds, nSevenths, rand3, rand7, tempNum;
+
+       let rand3 = mod(moveCounter, 3);  ///rand3 is a pseudo-random 3-remainder
+       let rand7 = mod(moveCounter, 7);  ///rand3 is a pseudo-random 7-remainder
+
+       let nThirds = (n*rand3)/3;
+       let nSeventh = (n*rand7)/7;
+
+       let tempNum = (nThirds + nSeventh) + randVar;
+________________________________________________________________
+   ///** gets the coordinates (x,y) of a random empty square in the 16 * 8 square grid *///
+   method Array getRandomEmptySquare() {
+      var int xRandVal;  /// x-pixel coord (number) of a square = 32 * (rand number between 0 and 15)
+      var int yRandVal;  /// x-pixel coord (number) of a square = 32 * (rand number between 0 and 7)
+      var int xOffset; /// an offset for x - a value to add for the rand var, so we never miss a square, if exists
+      var int yOffset; /// an offset for y
+      var Array coorArray;  /// The x-y coordinate of the empty square to return
+
+
+      let xOffset = 0;
+      let yOffset = 0;
+
+      let xRandVal = 32 * generatePseudoRandom(15, xOffset);
+      let yRandVal = 32 * generatePseudoRandom(7, yOffset);
+
+      while ((xOffset < 16) & (~(snake.checkIfEmpty(xRandVal, yRandVal)))) {
+            let yOffset = 0;
+            while ((yOffset < 8) & (~(snake.checkIfEmpty(xRandVal, yRandVal)))) {
+               let yRandVal = 32 * generatePseudoRandom(7, yOffset);
+               let yOffset = yOffset + 1;
+            }
+
+            let xOffset = xOffset + 1
+            let xRandVal = 32 * generatePseudoRandom(15, xOffset);
+        }
+
+     let coorArray = Array.new(2);
+     let coorArray[0] = xRandVal;
+     let coorArray[1] = yRandVal;
