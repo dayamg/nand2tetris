@@ -27,7 +27,7 @@ class SnakeGame {
       let isThereFoodNow = false;  /// in the beginning, earth was formless and empty, no food. snek hungry.
       let score = 0;
 
-      let FOOD_INCREMENT = 50; /// const. var. for delay between appearance of two foods
+      let FOOD_INCREMENT = 10; /// const. var. for delay between appearance of two foods
       let SCORE_INCREMENT = 3;
 
       return this;
@@ -64,16 +64,22 @@ class SnakeGame {
       else {
       let direction = prevDirection; /// if there was no movement, restore the previous value of direction
       }
-      do Sys.wait(80);  // delays the next movement
+      
+	  do Sys.wait(80);  // delays the next movement
 
-      if (moveCounter = FOOD_INCREMENT) { /// Every FOOD_INCREMENT moves, create food
-             do createFood();
-             let moveCounter=0;
-      }
+      if (~(isThereFoodNow)){ // no food in game
+		let moveCounter = moveCounter + 1;
+		if (moveCounter = FOOD_INCREMENT) { /// Every FOOD_INCREMENT moves, create food if there is no food in game
+            do createFood();
+            let moveCounter=0;
+		}
+	  }
+	  else {
+		do food.draw();
+	  }
+      
+	  do checkIfFoodEaten();
 
-      do checkIfFoodEaten();
-
-      let moveCounter = moveCounter + 1;
       return;
    }
 
@@ -85,10 +91,10 @@ class SnakeGame {
         let randValArr = getRandomEmptySquare();
         let xRandVal = randValArr[0];
         let yRandVal = randValArr[1];
+		do randValArr.dispose();
 
         let food = Food.new(xRandVal, yRandVal); /// keep the new food created
         let isThereFoodNow = true;
-        do snake.grow();
       }
        return;
    }
@@ -97,13 +103,14 @@ class SnakeGame {
         var int xFoodCoor, yFoodCoor;
         if (isThereFoodNow){
 
-             let xFoodCoor = food.xCoordinateGet();
-             let yFoodCoor = food.yCoordinateGet();
+            let xFoodCoor = food.xCoordinateGet();
+            let yFoodCoor = food.yCoordinateGet();
 
-             if (~(snake.checkIfEmpty(xFoodCoor, yFoodCoor))){
-                  do food.dispose();
-                  let isThereFoodNow = false;
-                  let score = score + SCORE_INCREMENT;
+            if (snake.doesEatFood(xFoodCoor, yFoodCoor)){
+                do food.dispose();
+				do snake.grow();
+                let isThereFoodNow = false;
+                let score = score + snake.getlinksNumber();
               }
         }
 
