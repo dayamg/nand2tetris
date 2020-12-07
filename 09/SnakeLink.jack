@@ -379,6 +379,7 @@ class SnakeLink {
    /** Erases the SnakeLink from the screen. */
    method void erase() {
 	  do Screen.setColor(false);
+
 	  do Screen.drawRectangle(xLoc, yLoc, xLoc + size-1, yLoc + size-1);
 	  return;
    }

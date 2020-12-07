@@ -3,6 +3,7 @@
 class Main {
     function void main() {
         var SnakeGame game;
+        var int score;
         let game = SnakeGame.new();
 		 
 		do Output.println(); 
@@ -11,14 +12,26 @@ class Main {
 		do Output.println(); 
 		do Output.println(); 
 		
-		do Output.printString("Snake!"); 
-		do Output.println(); 
+		do Output.printString("Snake!");
+		do Output.println();
 		do Output.printString("Use the arrows to move and eat the food (and this text)"); 
 		do Output.println(); 
 		do Output.printString("be careful not to hit yourself :)"); 
-        
-		do game.run();
+
+        let score = game.run();
+        do Main.printScore(score);
         do game.dispose();
         return;
     }
+
+      function void printScore(int score) {
+          do Screen.setColor(true);
+          do Screen.drawRectangle(0, 0, 511, 255);
+          do Screen.setColor(false);
+          do Output.printString("Game over!");
+          do Output.println();
+          do Output.printString("Your Score: ");
+          do Output.printInt(score);
+          return;
+   }
 }

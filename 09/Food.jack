@@ -24,7 +24,6 @@ class Food {
 
    /** Disposes this Food after using. It's organic garbage so it's okay to throw it. */
    method void dispose() {
-	  do erase();
 	  do Memory.deAlloc(this);
 	  return;
    }
