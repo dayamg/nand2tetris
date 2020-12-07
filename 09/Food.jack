@@ -24,6 +24,7 @@ class Food {
 
    /** Disposes this Food after using. It's organic garbage so it's okay to throw it. */
    method void dispose() {
+	  // do erase();
 	  do Memory.deAlloc(this);
 	  return;
    }
@@ -32,7 +33,7 @@ class Food {
    method void draw() {
         var int location, memAddress;
 
-	    let location = (32*y_coordinate) + (x_coordinate/16);
+	    let location = (32*(y_coordinate+7)) + ((x_coordinate+7)/16);
 	    let memAddress = 16384 + location;
 	    do Memory.poke(memAddress + 0, 3120);
 	    do Memory.poke(memAddress + 32, 7728);
