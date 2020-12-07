@@ -30,28 +30,28 @@ class Food {
 
    //** Draws the food; it is, in this case, the Forbidden fruit (since it's a snake.) **//
    function void draw() {
-    var int location;
-	let location = ((32*yLoc) + (xLoc/16));
-    var int memAddress;
+        var int location;
+	    let location = ((32*yLoc) + (xLoc/16));
+        var int scnAddres;
 
-	let memAddress = 16384 + location;
-	do Memory.poke(memAddress + 0, 3120);
-	do Memory.poke(memAddress + 32, 7728);
-	do Memory.poke(memAddress + 64, 3936);
-	do Memory.poke(memAddress + 96, 448);
-	do Memory.poke(memAddress + 128, 4064);
-	do Memory.poke(memAddress + 160, 7224);
-	do Memory.poke(memAddress + 192, 14364);
-	do Memory.poke(memAddress + 224, 12492);
-	do Memory.poke(memAddress + 256, 28774);
-	do Memory.poke(memAddress + 288, 28710);
-	do Memory.poke(memAddress + 320, 28678);
-	do Memory.poke(memAddress + 352, 28678);
-	do Memory.poke(memAddress + 384, 30726);
-	do Memory.poke(memAddress + 416, 31756);
-	do Memory.poke(memAddress + 448, 16188);
-	do Memory.poke(memAddress + 480, 8184);
-	return;
+	    let scnAddres = 16384 + location;
+        do Memory.poke(scnAddres + 0, -1);
+        do Memory.poke(scnAddres + 32, -1);
+        do Memory.poke(scnAddres + 64, -1);
+        do Memory.poke(scnAddres + 96, -1);
+        do Memory.poke(scnAddres + 128, -1);
+        do Memory.poke(scnAddres + 160, -1);
+        do Memory.poke(scnAddres + 192, -1);
+        do Memory.poke(scnAddres + 224, -1);
+        do Memory.poke(scnAddres + 256, -1);
+        do Memory.poke(scnAddres + 288, -1);
+        do Memory.poke(scnAddres + 320, -1);
+        do Memory.poke(scnAddres + 352, -1);
+        do Memory.poke(scnAddres + 384, -1);
+        do Memory.poke(scnAddres + 416, -1);
+        do Memory.poke(scnAddres + 448, -1);
+        do Memory.poke(scnAddres + 480, -1);
+	    return;
 	}
 
    /** Erases the food from the screen. */
