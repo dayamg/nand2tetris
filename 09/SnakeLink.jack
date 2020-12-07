@@ -50,7 +50,7 @@ class SnakeLink {
 	  return;
    }
 
-   /** Draws the SnakeLink on the screen. */
+   /** Draws the SnakeLink on the screen heading right. */
    method void drawHeadRight() {
 	   	var int location;
 		let location = ((32*yLoc) + (xLoc/16));
@@ -64,7 +64,7 @@ class SnakeLink {
 		return;	
    }
 
-   /** Draws the SnakeLink on the screen. */
+   /** Draws the SnakeLink on the screen heading left. */
    method void drawHeadLeft() {
 	   	var int location;
 		let location = ((32*yLoc) + (xLoc/16));
@@ -78,7 +78,7 @@ class SnakeLink {
 		return;	
    }   
    
-      /** Draws the SnakeLink on the screen. */
+      /** Draws the SnakeLink on the screen heading up. */
    method void drawHeadUp() {
 	   	var int location;
 		let location = ((32*yLoc) + (xLoc/16));
@@ -92,7 +92,7 @@ class SnakeLink {
 		return;	
    }
    
-   /** Draws the SnakeLink on the screen. */
+   /** Draws the SnakeLink on the screen heading down. */
    method void drawHeadDown() {
 	   	var int location;
 		let location = ((32*yLoc) + (xLoc/16));
@@ -106,7 +106,7 @@ class SnakeLink {
 		return;	
    }
    
-   /** Draws the SnakeLink on the screen. */
+   /** Draws the SnakeLink on the screen as general no head link. */
    method void drawNoHead() {
 	   	var int location;
 		let location = ((32*yLoc) + (xLoc/16));
@@ -121,7 +121,7 @@ class SnakeLink {
    }
    
 
-  /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+  /** Draws 1/4 of the SnakeLink on the screen, heading right part 1. */
    function void draw16Head1Right(int location) {
 		var int memAddress;	
 		let memAddress = 16384 + location;
@@ -144,7 +144,7 @@ class SnakeLink {
 		return;
 	}
 	
-  /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+  /** Draws 1/4 of the SnakeLink on the screen, heading left part 2. */
    function void draw16Head2Left(int location) {
 		var int memAddress;
 		let memAddress = 16384 + location;
@@ -168,7 +168,7 @@ class SnakeLink {
 	}
 	
 	
-  /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+  /** Draws 1/4 of the SnakeLink on the screen, heading left part 1. */
    function void draw16Head1Left(int location) {
 		var int memAddress;
 		let memAddress = 16384 + location;
@@ -191,7 +191,7 @@ class SnakeLink {
 		return;
 	}
    
-   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+   /** Draws 1/4 of the SnakeLink on the screen, heading right part 2. */
    function void draw16Head2Right(int location) {
 		var int memAddress;	
 		let memAddress = 16384 + location;
@@ -214,7 +214,7 @@ class SnakeLink {
 		return;
 	}
 	
-	   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+	   /** Draws 1/4 of the SnakeLink on the screen, heading up part 1. */
    function void draw16Head1Up(int location) {
 		var int memAddress;
 		let memAddress = 16384 + location;
@@ -237,7 +237,7 @@ class SnakeLink {
 		return;
 	}
 	
-	   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+	   /** Draws 1/4 of the SnakeLink on the screen, heading up part 2. */
    function void draw16Head2Up(int location) {
 		var int memAddress;
 		let memAddress = 16384 + location;
@@ -260,7 +260,7 @@ class SnakeLink {
 		return;
 	}
 	
-   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+   /** Draws 1/4 of the SnakeLink on the screen, heading down part 1. */
    function void draw16Head1Down(int location) {
 		var int memAddress;
 		let memAddress = 16384 + location;
@@ -283,7 +283,7 @@ class SnakeLink {
 		return;
 	}
 	
-   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
+   /** Draws 1/4 of the SnakeLink on the screen, heading down part 2. */
    function void draw16Head2Down(int location) {
 		var int memAddress;
 		let memAddress = 16384 + location;
@@ -306,7 +306,7 @@ class SnakeLink {
 		return;
 	}
 	
-  /** Draws 1/4 of the SnakeLink on the screen, with a squares pattern. */
+  /** Draws 1/4 of the SnakeLink on the screen, drowing a general pattern inside . */
    function void drawPattern(int location) {
 		var int memAddress;
 		let memAddress = 16384 + location;
