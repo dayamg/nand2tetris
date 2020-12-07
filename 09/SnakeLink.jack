@@ -120,53 +120,7 @@ class SnakeLink {
 		return;	
    }
    
-   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. 
-   function void draw16TiltRight(int location) {
-		var int memAddress;	
-		let memAddress = 16384 + location;
-		do Memory.poke(memAddress + 0, 3855);
-		do Memory.poke(memAddress + 32, -30841);
-		do Memory.poke(memAddress + 64, -15421);
-		do Memory.poke(memAddress + 96, -7711);
-		do Memory.poke(memAddress + 128, -3856);
-		do Memory.poke(memAddress + 160, 30840);
-		do Memory.poke(memAddress + 192, 15420);
-		do Memory.poke(memAddress + 224, 7710);
-		do Memory.poke(memAddress + 256, 3855);
-		do Memory.poke(memAddress + 288, -30841);
-		do Memory.poke(memAddress + 320, -15421);
-		do Memory.poke(memAddress + 352, -7711);
-		do Memory.poke(memAddress + 384, -3856);
-		do Memory.poke(memAddress + 416, 30840);
-		do Memory.poke(memAddress + 448, 15420);
-		do Memory.poke(memAddress + 480, 7710);
-		return;
-   }*/
 
- /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt left lines. 
-   function void draw16TiltLeft(int location) {
-		var int memAddress;	
-		let memAddress = 16384 + location;
-		do Memory.poke(memAddress + 0, 7710);
-		do Memory.poke(memAddress + 32, 15420);
-		do Memory.poke(memAddress + 64, 30840);
-		do Memory.poke(memAddress + 96, -3856);
-		do Memory.poke(memAddress + 128, -7711);
-		do Memory.poke(memAddress + 160, -15421);
-		do Memory.poke(memAddress + 192, -30841);
-		do Memory.poke(memAddress + 224, 3855);
-		do Memory.poke(memAddress + 256, 7710);
-		do Memory.poke(memAddress + 288, 15420);
-		do Memory.poke(memAddress + 320, 30840);
-		do Memory.poke(memAddress + 352, -3856);
-		do Memory.poke(memAddress + 384, -7711);
-		do Memory.poke(memAddress + 416, -15421);
-		do Memory.poke(memAddress + 448, -30841);
-		do Memory.poke(memAddress + 480, 3855);
-		return;
-   }*/
-
-   
   /** Draws 1/4 of the SnakeLink on the screen, with pattern of tilt right lines. */
    function void draw16Head1Right(int location) {
 		var int memAddress;	
@@ -384,17 +338,10 @@ class SnakeLink {
 	  return;
    }
    
-   /** Move the SnakeLink to given location on the screen. 
-   method void moveTo(int NewXLoc, int NewYLoc) {
-	  let xLoc = NewXLoc;
-	  let yLoc = NewYLoc;
-	  do draw();
-	  return;
-   } */
-   
+
    /** Moves the SnakeLink up by a link. */
 	method void moveUp() {
-		// drow the link up.
+		// draw the link up.
 		var int newYloc;
 		let newYloc = yLoc - size;
 		if (newYloc < 0) {
@@ -417,7 +364,7 @@ class SnakeLink {
 
    /** Moves the SnakeLink down by a link. */
    method void moveDown() {
-		// drow the link down.
+		// draw the link down.
 		var int newYloc;
 		let newYloc = yLoc + size;
 		if (newYloc < 0) {
@@ -440,7 +387,7 @@ class SnakeLink {
 
    /** Moves the SnakeLink left by a link. */
    method void moveLeft() {
-		// drow the link left.
+		// draw the link left.
 		var int newXloc;
 		let newXloc = xLoc - size;
 		if (newXloc < 0) {
@@ -463,7 +410,7 @@ class SnakeLink {
 
    /** Moves the SnakeLink right by a link. */
    method void moveRight() {
-		// drow the link right.
+		// draw the link right.
 		var int newXloc;
 		let newXloc = xLoc + size;
 		if (newXloc < 0) {

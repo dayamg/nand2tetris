@@ -53,12 +53,4 @@ class Food {
 	    return;
 	}
 
-   /** Erases the food from the screen. */
-   method void erase() {
-	  do Screen.setColor(false);
-	  do Screen.drawRectangle(x_coordinate, y_coordinate, x_coordinate + 15, y_coordinate + 15);
-	  return;
-   }
-
-
 }

@@ -1,0 +1,24 @@
+dayamg, roy.shtoyerman
+===============================================================================
+Daya Matok Gawi, ID 311143051, daya.matokgawi@mail.huji.ac.il
+Royee Shtoyerman, ID 318903713, roy.shtoyerman@mail.huji.ac.il
+===============================================================================
+
+                        Project 9 - High-level Programming
+                        ----------------------------------
+
+
+Submitted Files
+---------------
+README - This (very important) file.
+Main.jack - The Main class of our program, responsible for running the game.
+Snake.jack - The class representing the snake object.
+SnakeGame.jack - The main class which runs the game.
+SnakeLink.jack - The class of the links in the snake's body.
+Food.jack - The class of the food object.
+
+Remarks
+We have written the classes in a way that allows us to easily change some main parameters in the
+snake game, including the link size, snake length...
+
+-------

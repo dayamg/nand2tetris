@@ -1,7 +1,7 @@
 
 class SnakeGame {
-   field int FOOD_INCREMENT;
-   field int SCORE_INCREMENT;
+   static int FOOD_INCREMENT;
+   static int SCORE_INCREMENT;
 
 
    field int moveCounter;  /// counts the moves, so every 20 moves there will appear a new food
