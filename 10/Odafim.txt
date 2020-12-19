@@ -1,10 +1,1 @@
-
-        if self.curr_token == ">":
-            self.curr_token = "&gt;"
-        elif self.curr_token == "<":
-            self.curr_token = "&lt;"
-        elif self.curr_token == "&":
-            self.curr_token = "&amp;"
-        elif self.curr_token == "\'":
-            self.curr_token = "&quot;"
-        return '<symbol> ' + self.curr_token + ' </symbol>\n'
+cross
