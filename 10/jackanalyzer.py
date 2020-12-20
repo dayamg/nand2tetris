@@ -51,6 +51,8 @@ ELSE = "else"
 WHILE = "while"
 RETURN = "return"
 
+QUOTATION_MARK = "\""
+
 KEY_WORD_DICT = {"CLASS": "class", "METHOD": "method", "FUNCTION": "function", "CONSTRUCTOR": "constructor",
                  "FIELD": "field", "STATIC": "static", "VAR": "var", "INT": "int", "CHAR": "char",
                  "BOOLEAN": "boolean", "VOID": "void", "TRUE": "true", "FALSE": "false", "NULL": "null",
@@ -64,6 +66,8 @@ KEY_WORD_LIST = ["class", "method", "function", "constructor", "field", "static"
 KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|static|var|int|char|boolean|void|true"
                                     r"|false|null|this|let|do|if|else|while|return")
 KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|return")
+
+STRING_CONST_REGEX = re.compile(r"\".*\"")
 
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
@@ -103,11 +107,16 @@ class JackTokenizer:
 
         self.__get_token_list()
 
+        if not self.__token_list:
+            self.__token_index = 0
+            self.get_next_token()
+
     def get_next_token(self):
         """
         Yep. A getter. I'm very disappointed with myself for this OOPy behaviour.
         """
-        if not self.__next_token:
+        if self.has_more_tokens():
+            self.__next_token = self.__token_list[self.__token_index]
             return self.__next_token[0]
         return None
 
@@ -115,7 +124,8 @@ class JackTokenizer:
         """
         Another getter. Type is in one of the elements of TOKEN_TYPE_DICT.
         """
-        if not self.__next_token:
+        if self.has_more_tokens():
+            self.__next_token = self.__token_list[self.__token_index]
             return self.__next_token[1]
         return None
 
@@ -125,37 +135,72 @@ class JackTokenizer:
         """
         for line in self.__input_file:
             line = remove_comments_and_stuff(line)
+            if not line:
+                continue
+
             line_separated_array = line.split(SPACE_CHAR)
             for element in line_separated_array:
+                if element in SYMBOLS_LIST:  # Get rid of elements which are symbols
+                    self.__token_list.append( (element, SYMBOL) )
+                    continue
+
+                symbols_index_list = []   # List of all indices in which the string contains a symbol
+
                 for symbol in SYMBOLS_LIST:
                     for i in range(len(element)):  # This horrible "beginner's loop" is due to my laziness
                         if element[i] == symbol:
-                            self.__parse_one_element(element[0:i])
-                            self.__token_list.append((symbol, "SYMBOL"))
-                            self.__parse_one_element(element[i + 1:])
+                            symbols_index_list.append(i)
+
+                if not symbols_index_list:
+                    self.__parse_one_element(element)
+                    continue
+
+                i = 0
+                prev_part_last_index = 0
+                for i in symbols_index_list:
+                    self.__parse_one_element(element[prev_part_last_index:i])
+                    self.__token_list.append( (element[i], SYMBOL) )
+                    prev_part_last_index = i + 1
+
+                self.__parse_one_element(element[i+1:])  # Parse last part, or the whole string if there are no symbols
 
     def __parse_one_element(self, element):
         """
-        Parses one element of a line (after separating by spaces). Recalls itself recursively after separating by
-        symbols, i.e., by '.' or '{'.
-        :param element: one segment of a line to parse
+        Parses one segment of a line (with no symbols in it!)
         """
-        if element.isspace() or not element:  # Not supposed to happen, but anyway
+        if element.isspace() or not element:
             return
 
         if element in KEY_WORD_LIST:
-            self.__token_list.append((element, "KEYWORD"))
+            self.__token_list.append((element, KEYWORD))
             return
 
-        elif element in SYMBOLS_LIST:
-            self.__token_list.append((element, "SYMBOL"))
+        elif element in SYMBOLS_LIST:  # Again, not supposed to happen
+            self.__token_list.append((element, SYMBOL))
             return
 
-        else:
-            pass
+        elif element.isnumeric():
+            self.__token_list.append((int(element), INT_CONST))
+            return
+
+        is_string_const_match = re.match(STRING_CONST_REGEX, element)
+        if is_string_const_match:
+            if is_string_const_match.end() >= len(element) - 1:
+                self.__token_list.append( (element.strip(QUOTATION_MARK), STRING_CONST) )
+                return
+
+        else:   # Only other option is variable name
+            self.__token_list.append( (element, IDENTIFIER) )
+
+    def has_more_tokens(self):
+        """
+        :return: true of current index is not the last.
+        """
+        return self.__token_index < len(self.__token_list) - 1
 
     def advance(self):
-        pass
+        self.__token_index += 1
+        self.get_next_token()
 
 
 def remove_comments_and_stuff(line):
@@ -163,7 +208,7 @@ def remove_comments_and_stuff(line):
     Removes inline comments, tabs and newlines. Replaces double (or triple, or ...) spaces with one space.
     (Spaces are not removed, as it is important later)
     """
-    comment_pattern = re.compile(r"//.*")
+    comment_pattern = re.compile(r"\/\/.*|\/\*\*?.*\/*\/")
     line = re.sub(comment_pattern, '', line)  # remove comments
     tabs_and_new_lines_pattern = re.compile(r"\t*\n*")
     line = re.sub(tabs_and_new_lines_pattern, '', line)  # remove new lines and tabs
@@ -598,10 +643,16 @@ if __name__ == "__main__":
 
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
-        xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-        xml_file = open(xml_path, WRITE_MODE)
-        SyntaxAnalyzer(jack_path_input, xml_file)
-        xml_file.close()
+        # xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
+        # xml_file = open(xml_path, WRITE_MODE)
+        # SyntaxAnalyzer(jack_path_input, xml_file)
+        # xml_file.close()
+
+        jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
+        test_file = open("test.txt", WRITE_MODE)
+        while jack_tokenizer.has_more_tokens():
+            test_file.write(jack_tokenizer.get_next_token() + " ** Type: " + jack_tokenizer.get_token_type() + NEW_LINE)
+            jack_tokenizer.advance()
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
