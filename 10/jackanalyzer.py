@@ -71,7 +71,7 @@ STRING_CONST_REGEX = re.compile(r"\".*\"")
 
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
-                '[', ']'
+                '[', ']',
                 '.', ',', ';',
                 '+', '-', '*', '/',
                 '&', '|',
@@ -104,9 +104,10 @@ class JackTokenizer:
 
         self.__get_token_list()
 
-        if not self.__token_list:
+        if self.__token_list:
             self.__token_index = 0
             self.get_next_token()
+            self.get_token_type()
 
     def get_next_token(self):
         """
@@ -143,10 +144,9 @@ class JackTokenizer:
 
                 symbols_index_list = []   # List of all indices in which the string contains a symbol
 
-                for symbol in SYMBOLS_LIST:
-                    for i in range(len(element)):  # This horrible "beginner's loop" is due to my laziness
-                        if element[i] == symbol:
-                            symbols_index_list.append(i)
+                for i in range(len(element)):
+                    if element[i] in SYMBOLS_LIST:
+                        symbols_index_list.append(i)
 
                 if not symbols_index_list:
                     self.__parse_one_element(element)
@@ -316,10 +316,15 @@ if __name__ == "__main__":
         # xml_file.close()
 
         jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
-        test_file = open("test.txt", WRITE_MODE)
+        test_file = open("test.xml", WRITE_MODE)
+        test_file.write("<tokens>" + NEW_LINE)
         while jack_tokenizer.has_more_tokens():
-            test_file.write(jack_tokenizer.get_next_token() + " ** Type: " + jack_tokenizer.get_token_type() + NEW_LINE)
+            xml_line = "<" + str(jack_tokenizer.get_token_type()) + ">" + " " +  \
+                       str(jack_tokenizer.get_next_token()) + " </" + str(jack_tokenizer.get_token_type()) + ">" + \
+                       NEW_LINE
+            test_file.write(xml_line)
             jack_tokenizer.advance()
+        test_file.write("</tokens>" + NEW_LINE)
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
