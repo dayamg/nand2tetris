@@ -1,7 +1,17 @@
 import os
 import re
 import sys
+from lxml import *
+# from xml.etree.ElementTree import Element, SubElement, tostring
 
+# etree
+from lxml.etree import Element, SubElement
+
+# ElementTree
+# from elementtree.ElementTree import Element
+
+# ElementTree in the Python 2.5 standard library
+# from xml.etree.ElementTree import Element
 
 JACK_SUFFIX = ".jack"
 XML_SUFFIX = ".xml"
@@ -11,6 +21,36 @@ NEW_LINE = '\n'
 SPACE_CHAR = " "
 EMPTY_STRING = ''
 
+# token types constants
+KEYWORD = "keyword"
+SYMBOL = "symbol"
+IDENTIFIER = "identifier"
+INT_CONST = "integerConstant"
+STRING_CONST = "stringConstant"
+
+# keyword constants
+CLASS = "class"
+METHOD = "method"
+FUNCTION = "function"
+CONSTRUCTOR = "constructor"
+FIELD = "field"
+STATIC = "static"
+VAR = "var"
+INT = "int"
+CHAR = "char"
+BOOLEAN = "boolean"
+VOID = "void"
+TRUE = "true"
+FALSE = "false"
+NULL = "null"
+THIS = "this"
+LET = "let"
+DO = "do"
+IF = "if"
+ELSE = "else"
+WHILE = "while"
+RETURN = "return"
+
 KEY_WORD_DICT = {"CLASS": "class", "METHOD": "method", "FUNCTION": "function", "CONSTRUCTOR": "constructor",
                  "FIELD": "field", "STATIC": "static", "VAR": "var", "INT": "int", "CHAR": "char",
                  "BOOLEAN": "boolean", "VOID": "void", "TRUE": "true", "FALSE": "false", "NULL": "null",
@@ -18,8 +58,8 @@ KEY_WORD_DICT = {"CLASS": "class", "METHOD": "method", "FUNCTION": "function", "
                  "RETURN": "return"}
 
 KEY_WORD_LIST = ["class", "method", "function", "constructor", "field", "static", "var", "int", "char",
-                  "boolean", "void", "true", "false", "null", "this",  "let",  "do",  "if", "else", "while",
-                  "return"]
+                 "boolean", "void", "true", "false", "null", "this",  "let",  "do",  "if", "else", "while",
+                 "return"]
 
 KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|static|var|int|char|boolean|void|true"
                                     r"|false|null|this|let|do|if|else|while|return")
@@ -101,16 +141,18 @@ class JackTokenizer:
             return
 
         if element in KEY_WORD_LIST:
-            self.__token_list.append( (element, "KEYWORD") )
+            self.__token_list.append((element, "KEYWORD"))
             return
 
         elif element in SYMBOLS_LIST:
-            self.__token_list.append( (element, "SYMBOL") )
+            self.__token_list.append((element, "SYMBOL"))
             return
 
-        elif
+        else:
+            pass
 
-
+    def advance(self):
+        pass
 
 
 def remove_comments_and_stuff(line):
@@ -128,8 +170,94 @@ def remove_comments_and_stuff(line):
     return line.strip(SPACE_CHAR)  # Removes spaces in the beginning or end of line
 
 
-def jack_analyzer(jack_path_input, xml_file):
-    pass
+class SyntaxAnalyzer:
+
+    def __init__(self, jack_path_input, xml_file):
+        """
+        Yeah, this funky function is for constructing shit, you know.
+        """
+        self.__tokenizer = JackTokenizer(jack_path_input)
+        self.__xml_file = xml_file
+        self.__xml_tree = None
+        next_token = self.__tokenizer.get_next_token()
+        if next_token is not None:
+            self.__xml_tree = Element(CLASS)
+            self.__compile_class()
+        self.__xml_tree.write(self.__xml_file, encoding='unicode')
+
+    def __compile_class(self):
+        """
+        build xml tree for a class in jack.
+        """
+        tk = self.__tokenizer
+
+        # 'class' (keyword), className (identifier), '{' (symbol)
+        for i in range(3):
+            SubElement(self.__xml_tree, tk.get_token_type()).text = tk.get_next_token()
+            tk.advance()
+
+        # classVarDec*
+        while tk.get_token_type() == KEYWORD and tk.get_token_type() in [FIELD, STATIC]:
+            self.__compile_class_var_dec()
+
+        # subroutineDec*
+        while tk.get_token_type() == KEYWORD and tk.get_token_type() in [CONSTRUCTOR, FUNCTION, METHOD]:
+            self.__compile_subroutine_dec()
+
+    def __compile_class_var_dec(self):
+        """
+        build xml tree for a class var declaration in jack.
+        """
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_subroutine_dec(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_parameter_list(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_var_dec(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_statements(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_do(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_let(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_while(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_return(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_if(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_expression(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_term(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
+
+    def __compile_expression_list(self):
+        tk = self.__tokenizer
+        # !!TBD CONTINUE
 
 
 if __name__ == "__main__":
@@ -139,7 +267,7 @@ if __name__ == "__main__":
     if os.path.isfile(jack_path_input):
         xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
         xml_file = open(xml_path, WRITE_MODE)
-        jack_analyzer(jack_path_input, xml_file)
+        SyntaxAnalyzer(jack_path_input, xml_file)
         xml_file.close()
 
     if os.path.isdir(jack_path_input):
@@ -149,5 +277,5 @@ if __name__ == "__main__":
         xml_file = open(xml_path, WRITE_MODE)
         for filename in os.listdir(jack_path_input):
             if filename.endswith(JACK_SUFFIX):
-                jack_analyzer(os.path.join(jack_path_input, filename), xml_file)
+                SyntaxAnalyzer(os.path.join(jack_path_input, filename), xml_file)
         xml_file.close()
