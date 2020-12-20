@@ -21,7 +21,9 @@ KEY_WORD_LIST = ["class", "method", "function", "constructor", "field", "static"
                   "boolean", "void", "true", "false", "null", "this",  "let",  "do",  "if", "else", "while",
                   "return"]
 
-KEY_WORD_REGEX =  re.compile(r"")
+KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|static|var|int|char|boolean|void|true"
+                                    r"|false|null|this|let|do|if|else|while|return")
+KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|return")
 
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
@@ -31,8 +33,6 @@ SYMBOLS_LIST = ['{', '}',
                 '&', '|',
                 '<', '>', '=', '~'
                 ]
-
-
 
 SYMBOL_TRANSLATION_DICT = {">": "&gt;", "<": "&lt;", "&": "&amp;", "\'": "&quot;"}
 
@@ -52,11 +52,11 @@ class JackTokenizer:
         Yeah, this funky function is for constructing shit, you know.
         """
         self.__input_file = input_jack_file  # the input file, of file type
-        self.__next_token = None
-        self.__next_token_type = None  # the type (one of TOKEN_TYPE_DICT) of the next token
+        self.__next_token = None  # a tuple, (token, token_type). token_type is one of TOKEN_TYPE_DICT keys.
+        self.__next_token_type = None
 
         self.__token_index = NO_CURR_TOKEN_INDEX  # = -1
-        self.__token_list = []
+        self.__token_list = []  # A list of tuples, (token, token_type).
 
         self.__get_token_list()
 
@@ -64,7 +64,17 @@ class JackTokenizer:
         """
         Yep. A getter. I'm very disappointed with myself for this OOPy behaviour.
         """
-        return self.__next_token
+        if not self.__next_token:
+            return self.__next_token[0]
+        return None
+
+    def get_token_type(self):
+        """
+        Another getter. Type is in one of the elements of TOKEN_TYPE_DICT.
+        """
+        if not self.__next_token:
+            return self.__next_token[1]
+        return None
 
     def __get_token_list(self):
         """
@@ -72,7 +82,33 @@ class JackTokenizer:
         """
         for line in self.__input_file:
             line = remove_comments_and_stuff(line)
+            line_separated_array = line.split(SPACE_CHAR)
+            for element in line_separated_array:
+                for symbol in SYMBOLS_LIST:
+                    for i in range(len(element)):  # This horrible "beginner's loop" is due to my laziness
+                        if element[i] == symbol:
+                            self.__parse_one_element(element[0:i])
+                            self.__token_list.append((symbol, "SYMBOL"))
+                            self.__parse_one_element(element[i + 1:])
 
+    def __parse_one_element(self, element):
+        """
+        Parses one element of a line (after separating by spaces). Recalls itself recursively after separating by
+        symbols, i.e., by '.' or '{'.
+        :param element: one segment of a line to parse
+        """
+        if element.isspace() or not element:  # Not supposed to happen, but anyway
+            return
+
+        if element in KEY_WORD_LIST:
+            self.__token_list.append( (element, "KEYWORD") )
+            return
+
+        elif element in SYMBOLS_LIST:
+            self.__token_list.append( (element, "SYMBOL") )
+            return
+
+        elif
 
 
 
