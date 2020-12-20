@@ -132,8 +132,15 @@ class JackTokenizer:
         """
         for line in self.__input_file:
             line = remove_comments_and_stuff(line)
+            if not line:
+                continue
+
             line_separated_array = line.split(SPACE_CHAR)
             for element in line_separated_array:
+                if element in SYMBOLS_LIST:  # Get rid of elements which are symbols
+                    self.__token_list.append( (element, SYMBOL) )
+                    continue
+
                 symbols_index_list = []   # List of all indices in which the string contains a symbol
 
                 for symbol in SYMBOLS_LIST:
@@ -141,12 +148,16 @@ class JackTokenizer:
                         if element[i] == symbol:
                             symbols_index_list.append(i)
 
+                if not symbols_index_list:
+                    self.__parse_one_element(element)
+                    continue
+
                 i = 0
                 prev_part_last_index = 0
                 for i in symbols_index_list:
                     self.__parse_one_element(element[prev_part_last_index:i])
                     self.__token_list.append( (element[i], SYMBOL) )
-                    prev_part_last_index = i+1
+                    prev_part_last_index = i + 1
 
                 self.__parse_one_element(element[i+1:])  # Parse last part, or the whole string if there are no symbols
 
@@ -154,7 +165,7 @@ class JackTokenizer:
         """
         Parses one segment of a line (with no symbols in it!)
         """
-        if element.isspace() or not element:  # Not supposed to happen, but anyway
+        if element.isspace() or not element:
             return
 
         if element in KEY_WORD_LIST:
@@ -165,14 +176,15 @@ class JackTokenizer:
             self.__token_list.append((element, SYMBOL))
             return
 
-        elif element in element.isnumeric():
+        elif element.isnumeric():
             self.__token_list.append((int(element), INT_CONST))
             return
 
         is_string_const_match = re.match(STRING_CONST_REGEX, element)
-        if not is_string_const_match and is_string_const_match.end() >= len(element) - 1:
-            self.__token_list.append( (element.strip(QUOTATION_MARK), STRING_CONST) )
-            return
+        if is_string_const_match:
+            if is_string_const_match.end() >= len(element) - 1:
+                self.__token_list.append( (element.strip(QUOTATION_MARK), STRING_CONST) )
+                return
 
         else:   # Only other option is variable name
             self.__token_list.append( (element, IDENTIFIER) )
@@ -181,7 +193,7 @@ class JackTokenizer:
         """
         :return: true of current index is not the last.
         """
-        return self.__token_index == len(self.__token_list) - 1
+        return self.__token_index < len(self.__token_list) - 1
 
     def advance(self):
         self.__token_index += 1
@@ -193,7 +205,7 @@ def remove_comments_and_stuff(line):
     Removes inline comments, tabs and newlines. Replaces double (or triple, or ...) spaces with one space.
     (Spaces are not removed, as it is important later)
     """
-    comment_pattern = re.compile(r"//.*")
+    comment_pattern = re.compile(r"\/\/.*|\/\*\*?.*\/*\/")
     line = re.sub(comment_pattern, '', line)  # remove comments
     tabs_and_new_lines_pattern = re.compile(r"\t*\n*")
     line = re.sub(tabs_and_new_lines_pattern, '', line)  # remove new lines and tabs
@@ -298,10 +310,16 @@ if __name__ == "__main__":
 
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
-        xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-        xml_file = open(xml_path, WRITE_MODE)
-        SyntaxAnalyzer(jack_path_input, xml_file)
-        xml_file.close()
+        # xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
+        # xml_file = open(xml_path, WRITE_MODE)
+        # SyntaxAnalyzer(jack_path_input, xml_file)
+        # xml_file.close()
+
+        jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
+        test_file = open("test.txt", WRITE_MODE)
+        while jack_tokenizer.has_more_tokens():
+            test_file.write(jack_tokenizer.get_next_token() + " ** Type: " + jack_tokenizer.get_token_type() + NEW_LINE)
+            jack_tokenizer.advance()
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
