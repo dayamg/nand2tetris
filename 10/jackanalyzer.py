@@ -140,14 +140,18 @@ class JackTokenizer:
             if match:
                 start_ind, end_ind = match.span()
                 mid_line = line[start_ind:end_ind]
-                line = line[0:start_ind] + mid_line.replace(SPACE_CHAR, NEW_LINE) + line[end_ind + 1:]
+                line = line[0:start_ind] + mid_line.replace(SPACE_CHAR, NEW_LINE) + line[end_ind:]
         return line
 
     def __get_token_list(self):
         """
         Initializes a list of all tokens in the input file.
         """
+        #  To be deleted:
+        line_counter = 1
+
         for line in self.__input_file:
+            line_counter += 1
             line = remove_comments_and_stuff(line)
             if not line:
                 continue
