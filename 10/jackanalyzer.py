@@ -223,8 +223,8 @@ class JackTokenizer:
 
 def remove_multiple_line_comments(line):
     """
-    assume no constant sring is inside.
-    get a line, check is a const string is inside, dont tauch it
+    Assume no constant srings with a comment in it is inside.
+    check for // and /* commands on multiple lines and remove the comment parts.
     """
     global g_in_multiple_line_comments
     start_comment_index = None
@@ -254,6 +254,11 @@ def remove_multiple_line_comments(line):
             return ""
         else:
             return line
+
+    # if "bla */ important stuff /* bla"
+    if start_comment_index is not None and end_comment_index is not None \
+            and start_comment_index > end_comment_index:
+        return line[end_comment_index:start_comment_index]
 
     if start_comment_index is None:
         start_comment_index = 0
@@ -440,6 +445,11 @@ class SyntaxAnalyzer:
         Build xml tree for statements in jack.
         """
         tk = self.__tokenizer
+        # check is list is empty, meaning next token is }
+        if tk.get_token_type() == SYMBOL and tk.get_next_token() == '}':
+            xml_tree.text = '\n'
+            return
+
         # statement*
         while tk.get_token_type() == KEYWORD and tk.get_next_token() in [LET, IF, WHILE, DO, RETURN]:
             if tk.get_next_token() == LET:
