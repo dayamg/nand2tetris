@@ -249,7 +249,7 @@ class SyntaxAnalyzer:
         tree = ElementTree(self.__xml_tree)
         # str = tostring(self.__xml_tree) # pretty_print=True))
 
-        tree.write(xml_path, pretty_print=TRUE, encoding="utf-8") #
+        tree.write(xml_path, pretty_print=TRUE, encoding="utf-8")
 
     def __compile_class(self, xml_tree):
         """
@@ -269,6 +269,10 @@ class SyntaxAnalyzer:
         # subroutineDec*
         while tk.get_token_type() == KEYWORD and tk.get_next_token() in [CONSTRUCTOR, FUNCTION, METHOD]:
             self.__compile_subroutine_dec(SubElement(xml_tree, "subroutineDec"))
+
+        # '}'
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
 
     def __compile_class_var_dec(self, xml_tree):
         """
@@ -662,9 +666,6 @@ if __name__ == "__main__":
     if os.path.isfile(jack_path_input):
         xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
         xml_file = open(xml_path, WRITE_MODE)
-        SyntaxAnalyzer(jack_path_input, xml_path)
-        xml_file.close()
-
         # TOKENIZER TEST
         jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
         test_file = open("test.xml", WRITE_MODE)
@@ -676,6 +677,9 @@ if __name__ == "__main__":
             test_file.write(xml_line)
             jack_tokenizer.advance()
         test_file.write("</tokens>" + NEW_LINE)
+
+        SyntaxAnalyzer(jack_path_input, xml_path)
+        xml_file.close()
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
