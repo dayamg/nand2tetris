@@ -6,7 +6,7 @@ from lxml import *
 from lxml.etree import Element, SubElement, ElementTree, tostring
 
 # etree
-# from xml.etree import Element, ElementTree, SubElement, tostring
+# from lxml.etree import Element, SubElement
 
 # ElementTree
 # from elementtree.ElementTree import Element
@@ -68,11 +68,11 @@ KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|st
                                     r"|false|null|this|let|do|if|else|while|return")
 KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|return")
 
-STRING_CONST_REGEX = re.compile(r"\".*\"")
+STRING_CONST_REGEX = re.compile(r"\".*?\"")
 
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
-                '[', ']'
+                '[', ']',
                 '.', ',', ';',
                 '+', '-', '*', '/',
                 '&', '|',
@@ -108,9 +108,10 @@ class JackTokenizer:
 
         self.__get_token_list()
 
-        if not self.__token_list:
+        if self.__token_list:
             self.__token_index = 0
             self.get_next_token()
+            self.get_token_type()
 
     def get_next_token(self):
         """
@@ -130,6 +131,18 @@ class JackTokenizer:
             return self.__next_token[1]
         return None
 
+    def __replace_spaces_in_string(self, line):
+        """
+        There is a problem when splitting a line by spaces, in case of strings that include space, e.g., "hi there".
+        This function replaces the spaces with \n and eventually the string is reconstructed (replaced back).
+        """
+        for match in re.finditer(STRING_CONST_REGEX, line):
+            if match:
+                start_ind, end_ind = match.span()
+                mid_line = line[start_ind:end_ind]
+                line = line[0:start_ind] + mid_line.replace(SPACE_CHAR, NEW_LINE) + line[end_ind + 1:]
+        return line
+
     def __get_token_list(self):
         """
         Initializes a list of all tokens in the input file.
@@ -139,6 +152,8 @@ class JackTokenizer:
             if not line:
                 continue
 
+            line = self.__replace_spaces_in_string(line)
+
             line_separated_array = line.split(SPACE_CHAR)
             for element in line_separated_array:
                 if element in SYMBOLS_LIST:  # Get rid of elements which are symbols
@@ -147,10 +162,9 @@ class JackTokenizer:
 
                 symbols_index_list = []   # List of all indices in which the string contains a symbol
 
-                for symbol in SYMBOLS_LIST:
-                    for i in range(len(element)):  # This horrible "beginner's loop" is due to my laziness
-                        if element[i] == symbol:
-                            symbols_index_list.append(i)
+                for i in range(len(element)):
+                    if element[i] in SYMBOLS_LIST:
+                        symbols_index_list.append(i)
 
                 if not symbols_index_list:
                     self.__parse_one_element(element)
@@ -187,7 +201,13 @@ class JackTokenizer:
         is_string_const_match = re.match(STRING_CONST_REGEX, element)
         if is_string_const_match:
             if is_string_const_match.end() >= len(element) - 1:
-                self.__token_list.append( (element.strip(QUOTATION_MARK), STRING_CONST) )
+
+                # We now replace back the new lines with space chars.
+                element = element.strip(QUOTATION_MARK)
+                element = element.replace(NEW_LINE, SPACE_CHAR)
+
+                element.strip(QUOTATION_MARK)
+                self.__token_list.append( (element.replace(NEW_LINE, SPACE_CHAR), STRING_CONST) )
                 return
 
         else:   # Only other option is variable name
@@ -655,11 +675,16 @@ if __name__ == "__main__":
         xml_file.close()
 
         # TOKENIZER TEST
-        # jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
-        # test_file = open("test.txt", WRITE_MODE)
-        # while jack_tokenizer.has_more_tokens():
-        #     test_file.write(jack_tokenizer.get_next_token() + " ** Type: " + jack_tokenizer.get_token_type() + NEW_LINE)
-        #     jack_tokenizer.advance()
+        jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
+        test_file = open("test.xml", WRITE_MODE)
+        test_file.write("<tokens>" + NEW_LINE)
+        while jack_tokenizer.has_more_tokens():
+            xml_line = "<" + str(jack_tokenizer.get_token_type()) + ">" + " " +  \
+                       str(jack_tokenizer.get_next_token()) + " </" + str(jack_tokenizer.get_token_type()) + ">" + \
+                       NEW_LINE
+            test_file.write(xml_line)
+            jack_tokenizer.advance()
+        test_file.write("</tokens>" + NEW_LINE)
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
