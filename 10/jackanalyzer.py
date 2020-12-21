@@ -79,6 +79,8 @@ TOKEN_TYPE_DICT = {"KEYWORD": "keyword", "SYMBOL": "symbol", "IDENTIFIER": "iden
 
 NO_CURR_TOKEN_INDEX = -1
 
+g_in_multiple_line_comments = False
+
 
 class JackTokenizer:
     """
@@ -143,6 +145,7 @@ class JackTokenizer:
         for line in self.__input_file:
             line_counter += 1
             line = remove_comments_and_stuff(line)
+            line = remove_multiple_line_comments(line)
             if not line:
                 continue
 
@@ -188,7 +191,7 @@ class JackTokenizer:
             self.__token_list.append((element, SYMBOL))
             return
 
-        elif element.isnumeric():
+        elif element.isdigit():
             self.__token_list.append((int(element), INT_CONST))
             return
 
@@ -216,6 +219,49 @@ class JackTokenizer:
     def advance(self):
         self.__token_index += 1
         self.get_next_token()
+
+
+def remove_multiple_line_comments(line):
+    """
+    assume no constant sring is inside.
+    get a line, check is a const string is inside, dont tauch it
+    """
+    global g_in_multiple_line_comments
+    start_comment_index = None
+    end_comment_index = None
+
+    for i in range(len(line)-1):
+        if not g_in_multiple_line_comments:
+            if line[i] == '/':
+                # check for inline command '//'
+                if line[i+1] == '/':
+                    line = line[:i]
+                    return line
+                # check for multi-line command '/*'
+                if line[i+1] == '*':
+                    g_in_multiple_line_comments = True
+                    start_comment_index = i
+        
+        # look for end '*/' of multi line comment
+        else:
+            if line[i:i+2] == "*/":
+                g_in_multiple_line_comments = False
+                end_comment_index = i+2
+
+    # all line is in or out multi-line commend.
+    if start_comment_index is None and end_comment_index is None:
+        if g_in_multiple_line_comments:
+            return ""
+        else:
+            return line
+
+    if start_comment_index is None:
+        start_comment_index = 0
+
+    if end_comment_index is None:
+        end_comment_index = len(line)
+
+    return line[0:start_comment_index] + line[end_comment_index:len(line)]
 
 
 def remove_comments_and_stuff(line):
@@ -346,9 +392,6 @@ class SyntaxAnalyzer:
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == ')':
             xml_tree.text = '\n'
             return
-
-        # if (tk.get_token_type() == KEYWORD and tk.get_next_token() in [INT, CHAR, BOOLEAN]) \
-        #         or (tk.get_token_type() == IDENTIFIER):
 
         # type
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -593,7 +636,7 @@ class SyntaxAnalyzer:
 
         # integerConstant/stringConstant
         if tk.get_token_type() in [INT_CONST, STRING_CONST]:
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+            SubElement(xml_tree, tk.get_token_type()).text = str(tk.get_next_token())
             tk.advance()
             return
 
@@ -665,7 +708,7 @@ if __name__ == "__main__":
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
         xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-        xml_file = open(xml_path, WRITE_MODE)
+
         # TOKENIZER TEST
         jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
         test_file = open("test.xml", WRITE_MODE)
@@ -677,18 +720,15 @@ if __name__ == "__main__":
             test_file.write(xml_line)
             jack_tokenizer.advance()
         test_file.write("</tokens>" + NEW_LINE)
+        ######
 
         SyntaxAnalyzer(jack_path_input, xml_path)
-        xml_file.close()
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
-        # xml_file_name = os.path.basename(jack_path_input)
-        # xml_path = os.path.join(jack_path_input, xml_file_name + XML_SUFFIX)
-        # xml_file = open(xml_path, WRITE_MODE)
         for filename in os.listdir(jack_path_input):
             if filename.endswith(JACK_SUFFIX):
                 filename_jack_path = os.path.join(jack_path_input, filename)
                 xml_path = filename_jack_path.replace(JACK_SUFFIX, XML_SUFFIX)
                 SyntaxAnalyzer(filename_jack_path, xml_path)
-        # xml_file.close()
+
