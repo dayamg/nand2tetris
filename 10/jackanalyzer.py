@@ -221,7 +221,7 @@ class JackTokenizer:
         """
         :return: true of current index is not the last.
         """
-        return self.__token_index < len(self.__token_list) - 1
+        return self.__token_index <= len(self.__token_list) - 1
 
     def advance(self):
         self.__token_index += 1
