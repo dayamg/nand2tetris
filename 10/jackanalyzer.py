@@ -3,9 +3,10 @@ import re
 import sys
 from lxml import *
 # from xml.etree.ElementTree import Element, SubElement, tostring
+from lxml.etree import Element, SubElement, ElementTree, tostring
 
 # etree
-from lxml.etree import Element, SubElement
+# from xml.etree import Element, ElementTree, SubElement, tostring
 
 # ElementTree
 # from elementtree.ElementTree import Element
@@ -220,24 +221,29 @@ def remove_comments_and_stuff(line):
 
 class SyntaxAnalyzer:
 
-    def __init__(self, jack_path_input, xml_file):
+    def __init__(self, jack_path_input, xml_path):
         """
         Yeah, this funky function is for constructing shit, you know.
         """
-        self.__tokenizer = JackTokenizer(jack_path_input)
-        self.__xml_file = xml_file
+        self.__tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
+        self.__xml_file = xml_path
         self.__xml_tree = None
         next_token = self.__tokenizer.get_next_token()
         if next_token is not None:
             self.__xml_tree = Element(CLASS)
-            self.__compile_class(Element(CLASS))
-        self.__xml_tree.write(self.__xml_file, encoding='unicode')
+            self.__compile_class(self.__xml_tree)
+        tree = ElementTree(self.__xml_tree)
+        # str = tostring(self.__xml_tree) # pretty_print=True))
+
+        tree.write(xml_path, pretty_print=TRUE, encoding="utf-8") #
 
     def __compile_class(self, xml_tree):
         """
         Build xml tree for a class in jack.
         """
         tk = self.__tokenizer
+
+        tk.advance()  # TODO! ERASE - ONLY HERE BECAUSE TOKENIZER GET FIRST TOKEN IN DELAY.
 
         # 'class' className '{'
         for i in range(3):
@@ -322,7 +328,7 @@ class SyntaxAnalyzer:
 
         # check is list is empty, meaning next token is )
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == ')':
-            # xml_tree = '\n'
+            xml_tree.text = '\n'
             return
 
         # if (tk.get_token_type() == KEYWORD and tk.get_next_token() in [INT, CHAR, BOOLEAN]) \
@@ -624,7 +630,7 @@ class SyntaxAnalyzer:
         tk = self.__tokenizer
         # check is list is empty, meaning next token is )
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == ')':
-            # xml_tree = '\n'
+            xml_tree.text = '\n'
             return
 
         # expression
@@ -643,23 +649,26 @@ if __name__ == "__main__":
 
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
-        # xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-        # xml_file = open(xml_path, WRITE_MODE)
-        # SyntaxAnalyzer(jack_path_input, xml_file)
-        # xml_file.close()
+        xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
+        xml_file = open(xml_path, WRITE_MODE)
+        SyntaxAnalyzer(jack_path_input, xml_path)
+        xml_file.close()
 
-        jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
-        test_file = open("test.txt", WRITE_MODE)
-        while jack_tokenizer.has_more_tokens():
-            test_file.write(jack_tokenizer.get_next_token() + " ** Type: " + jack_tokenizer.get_token_type() + NEW_LINE)
-            jack_tokenizer.advance()
+        # TOKENIZER TEST
+        # jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
+        # test_file = open("test.txt", WRITE_MODE)
+        # while jack_tokenizer.has_more_tokens():
+        #     test_file.write(jack_tokenizer.get_next_token() + " ** Type: " + jack_tokenizer.get_token_type() + NEW_LINE)
+        #     jack_tokenizer.advance()
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
-        xml_file_name = os.path.basename(jack_path_input)
-        xml_path = os.path.join(jack_path_input, xml_file_name + XML_SUFFIX)
-        xml_file = open(xml_path, WRITE_MODE)
+        # xml_file_name = os.path.basename(jack_path_input)
+        # xml_path = os.path.join(jack_path_input, xml_file_name + XML_SUFFIX)
+        # xml_file = open(xml_path, WRITE_MODE)
         for filename in os.listdir(jack_path_input):
             if filename.endswith(JACK_SUFFIX):
-                SyntaxAnalyzer(os.path.join(jack_path_input, filename), xml_file)
-        xml_file.close()
+                filename_jack_path = os.path.join(jack_path_input, filename)
+                xml_path = filename_jack_path.replace(JACK_SUFFIX, XML_SUFFIX)
+                SyntaxAnalyzer(filename_jack_path, xml_path)
+        # xml_file.close()
