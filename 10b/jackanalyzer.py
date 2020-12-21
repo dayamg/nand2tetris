@@ -1,8 +1,18 @@
 import os
 import re
 import sys
-
+from lxml import *
+# from xml.etree.ElementTree import Element, SubElement, tostring
 from lxml.etree import Element, SubElement, ElementTree, tostring
+
+# etree
+# from lxml.etree import Element, SubElement
+
+# ElementTree
+# from elementtree.ElementTree import Element
+
+# ElementTree in the Python 2.5 standard library
+# from xml.etree.ElementTree import Element
 
 JACK_SUFFIX = ".jack"
 XML_SUFFIX = ".xml"
@@ -58,7 +68,7 @@ KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|st
                                     r"|false|null|this|let|do|if|else|while|return")
 KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|return")
 
-STRING_CONST_REGEX = re.compile(r"\"(.*?\n*)*\"")
+STRING_CONST_REGEX = re.compile(r"\".*?\"")
 
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
@@ -130,18 +140,14 @@ class JackTokenizer:
             if match:
                 start_ind, end_ind = match.span()
                 mid_line = line[start_ind:end_ind]
-                line = line[0:start_ind] + mid_line.replace(SPACE_CHAR, NEW_LINE) + line[end_ind:]
+                line = line[0:start_ind] + mid_line.replace(SPACE_CHAR, NEW_LINE) + line[end_ind + 1:]
         return line
 
     def __get_token_list(self):
         """
         Initializes a list of all tokens in the input file.
         """
-        #  To be deleted:
-        line_counter = 1
-
         for line in self.__input_file:
-            line_counter += 1
             line = remove_comments_and_stuff(line)
             if not line:
                 continue
@@ -211,7 +217,7 @@ class JackTokenizer:
         """
         :return: true of current index is not the last.
         """
-        return self.__token_index <= len(self.__token_list) - 1
+        return self.__token_index < len(self.__token_list) - 1
 
     def advance(self):
         self.__token_index += 1
@@ -257,6 +263,8 @@ class SyntaxAnalyzer:
         """
         tk = self.__tokenizer
 
+        tk.advance()  # TODO! ERASE - ONLY HERE BECAUSE TOKENIZER GET FIRST TOKEN IN DELAY.
+
         # 'class' className '{'
         for i in range(3):
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -281,7 +289,7 @@ class SyntaxAnalyzer:
             tk.advance()
 
         # (, varName)*
-        while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
+        while tk.get_token_type() == SYMBOL and tk.get_token_type() == ',':
             # ','
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
@@ -324,7 +332,7 @@ class SyntaxAnalyzer:
 
         # varDec*
         while tk.get_token_type() == KEYWORD and tk.get_next_token() == VAR:
-            self.__compile_var_dec(SubElement(xml_tree, "varDec"))
+            self.__compile_class_var_dec(SubElement(xml_tree, "varDec"))
         # statements
         self.__compile_statements(SubElement(xml_tree, "statements"))
 
@@ -353,17 +361,18 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
 
-        # (, type varName)*
+        # (, varName)*
         while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
             # ','
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            # type
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # varName
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
+
+        # ';'
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
 
     def __compile_var_dec(self, xml_tree):
         """
@@ -398,13 +407,13 @@ class SyntaxAnalyzer:
             if tk.get_next_token() == LET:
                 self.__compile_let(SubElement(xml_tree, "letStatement"))
             if tk.get_next_token() == IF:
-                self.__compile_if(SubElement(xml_tree, "ifStatement"))
+                self.__compile_let(SubElement(xml_tree, "ifStatement"))
             if tk.get_next_token() == WHILE:
-                self.__compile_while(SubElement(xml_tree, "whileStatement"))
+                self.__compile_let(SubElement(xml_tree, "whileStatement"))
             if tk.get_next_token() == DO:
-                self.__compile_do(SubElement(xml_tree, "doStatement"))
+                self.__compile_let(SubElement(xml_tree, "doStatement"))
             if tk.get_next_token() == RETURN:
-                self.__compile_return(SubElement(xml_tree, "returnStatement"))
+                self.__compile_let(SubElement(xml_tree, "returnStatement"))
 
     def __compile_do(self, xml_tree):
         """
@@ -647,7 +656,7 @@ class SyntaxAnalyzer:
         # expression
         self.__compile_expression(SubElement(xml_tree, 'expression'))
         # (, expression)*
-        while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
+        while tk.get_token_type() == SYMBOL and tk.get_token_type() == ',':
             # ','
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
