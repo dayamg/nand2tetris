@@ -67,7 +67,7 @@ KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|st
                                     r"|false|null|this|let|do|if|else|while|return")
 KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|return")
 
-STRING_CONST_REGEX = re.compile(r"\".*\"")
+STRING_CONST_REGEX = re.compile(r"\".*?\"")
 
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
@@ -130,6 +130,18 @@ class JackTokenizer:
             return self.__next_token[1]
         return None
 
+    def __replace_spaces_in_string(self, line):
+        """
+        There is a problem when splitting a line by spaces, in case of strings that include space, e.g., "hi there".
+        This function replaces the spaces with \n and eventually the string is reconstructed (replaced back).
+        """
+        for match in re.finditer(STRING_CONST_REGEX, line):
+            if match:
+                start_ind, end_ind = match.span()
+                mid_line = line[start_ind:end_ind]
+                line = line[0:start_ind] + mid_line.replace(SPACE_CHAR, NEW_LINE) + line[end_ind + 1:]
+        return line
+
     def __get_token_list(self):
         """
         Initializes a list of all tokens in the input file.
@@ -138,6 +150,8 @@ class JackTokenizer:
             line = remove_comments_and_stuff(line)
             if not line:
                 continue
+
+            line = self.__replace_spaces_in_string(line)
 
             line_separated_array = line.split(SPACE_CHAR)
             for element in line_separated_array:
@@ -186,7 +200,13 @@ class JackTokenizer:
         is_string_const_match = re.match(STRING_CONST_REGEX, element)
         if is_string_const_match:
             if is_string_const_match.end() >= len(element) - 1:
-                self.__token_list.append( (element.strip(QUOTATION_MARK), STRING_CONST) )
+
+                # We now replace back the new lines with space chars.
+                element = element.strip(QUOTATION_MARK)
+                element = element.replace(NEW_LINE, SPACE_CHAR)
+
+                element.strip(QUOTATION_MARK)
+                self.__token_list.append( (element.replace(NEW_LINE, SPACE_CHAR), STRING_CONST) )
                 return
 
         else:   # Only other option is variable name
