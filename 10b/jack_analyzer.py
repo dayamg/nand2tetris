@@ -68,7 +68,7 @@ KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|st
                                     r"|false|null|this|let|do|if|else|while|return")
 KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|return")
 
-STRING_CONST_REGEX = re.compile(r"\"(.*?\n*)*\"")
+STRING_CONST_REGEX = re.compile(r"\".*?\"")
 
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
