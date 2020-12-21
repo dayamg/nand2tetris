@@ -1,0 +1,19 @@
+dayamg, roy.shtoyerman
+===============================================================================
+Daya Matok Gawi, ID 311143051, daya.matokgawi@mail.huji.ac.il
+Royee Shtoyerman, ID 318903713, roy.shtoyerman@mail.huji.ac.il
+===============================================================================
+
+                           Project 10 - Jack Analyzer
+                           --------------------------
+
+Submitted Files
+---------------
+README - This file.
+jackanalyzer.py - The Python file that converts jack files into xml files.
+Makefile - The "black box" make program that runs the assembler.
+JackAnalyzer - The make program that runs the python file.
+
+Remarks
+We used lxml to create the xml tree and write to the xml file.
+-------
