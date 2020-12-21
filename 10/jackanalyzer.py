@@ -60,6 +60,8 @@ KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|retu
 
 STRING_CONST_REGEX = re.compile(r"\"(.*?\n*)*\"")
 
+COMMENT_PATTERN = re.compile(r"\/\/.*|\/\*\*?.*?(\n.*?)*\*\/")
+
 SYMBOLS_LIST = ['{', '}',
                 '(', ')',
                 '[', ']',
@@ -95,6 +97,9 @@ class JackTokenizer:
         self.__next_token = None  # a tuple, (token, token_type). token_type is one of TOKEN_TYPE_DICT keys.
         self.__next_token_type = None
 
+        self.__string_counter = 0
+        self.__string_list = []
+
         self.__token_index = NO_CURR_TOKEN_INDEX  # = -1
         self.__token_list = []  # A list of tuples, (token, token_type).
 
@@ -104,6 +109,8 @@ class JackTokenizer:
             self.__token_index = 0
             self.get_next_token()
             self.get_token_type()
+
+
 
     def get_next_token(self):
         """
@@ -139,17 +146,15 @@ class JackTokenizer:
         """
         Initializes a list of all tokens in the input file.
         """
-        #  To be deleted:
-        line_counter = 1
 
         for line in self.__input_file:
-            line_counter += 1
+            line = self.__parse_strings(line)
             line = remove_comments_and_stuff(line)
             line = remove_multiple_line_comments(line)
             if not line:
                 continue
 
-            line = self.__replace_spaces_in_string(line)
+            # line = self.__replace_spaces_in_string(line)
 
             line_separated_array = line.split(SPACE_CHAR)
             for element in line_separated_array:
@@ -176,6 +181,16 @@ class JackTokenizer:
 
                 self.__parse_one_element(element[i+1:])  # Parse last part, or the whole string if there are no symbols
 
+    def __parse_strings(self, line):
+        for match in re.finditer(STRING_CONST_REGEX, line):
+            start_ind, end_ind = match.span()
+            curr_string = line[start_ind:end_ind]
+            line = line.replace(curr_string, str(self.__string_counter))
+            self.__string_list.append(curr_string)
+            self.__string_counter += 1
+            return line
+        return line
+
     def __parse_one_element(self, element):
         """
         Parses one segment of a line (with no symbols in it!)
@@ -200,11 +215,8 @@ class JackTokenizer:
             if is_string_const_match.end() >= len(element) - 1:
 
                 # We now replace back the new lines with space chars.
-                element = element.strip(QUOTATION_MARK)
-                element = element.replace(NEW_LINE, SPACE_CHAR)
-
-                element.strip(QUOTATION_MARK)
-                self.__token_list.append( (element.replace(NEW_LINE, SPACE_CHAR), STRING_CONST) )
+                element = self.__string_list[int(element)].strip(QUOTATION_MARK)
+                self.__token_list.append( (element, STRING_CONST) )
                 return
 
         else:   # Only other option is variable name
@@ -223,8 +235,8 @@ class JackTokenizer:
 
 def remove_multiple_line_comments(line):
     """
-    Assume no constant srings with a comment in it is inside.
-    check for // and /* commands on multiple lines and remove the comment parts.
+    assume no constant string is inside.
+    get a line, check is a const string is inside, dont tauch it
     """
     global g_in_multiple_line_comments
     start_comment_index = None
@@ -255,11 +267,6 @@ def remove_multiple_line_comments(line):
         else:
             return line
 
-    # if "bla */ important stuff /* bla"
-    if start_comment_index is not None and end_comment_index is not None \
-            and start_comment_index > end_comment_index:
-        return line[end_comment_index:start_comment_index]
-
     if start_comment_index is None:
         start_comment_index = 0
 
@@ -274,8 +281,7 @@ def remove_comments_and_stuff(line):
     Removes inline comments, tabs and newlines. Replaces double (or triple, or ...) spaces with one space.
     (Spaces are not removed, as it is important later)
     """
-    comment_pattern = re.compile(r"\/\/.*|\/\*\*?.*\/*\/")
-    line = re.sub(comment_pattern, '', line)  # remove comments
+    line = re.sub(COMMENT_PATTERN, '', line)  # remove comments
     tabs_and_new_lines_pattern = re.compile(r"\t*\n*")
     line = re.sub(tabs_and_new_lines_pattern, '', line)  # remove new lines and tabs
     multiple_spaces_pattern = re.compile(r"  +")
@@ -445,11 +451,6 @@ class SyntaxAnalyzer:
         Build xml tree for statements in jack.
         """
         tk = self.__tokenizer
-        # check is list is empty, meaning next token is }
-        if tk.get_token_type() == SYMBOL and tk.get_next_token() == '}':
-            xml_tree.text = '\n'
-            return
-
         # statement*
         while tk.get_token_type() == KEYWORD and tk.get_next_token() in [LET, IF, WHILE, DO, RETURN]:
             if tk.get_next_token() == LET:
