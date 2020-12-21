@@ -185,7 +185,7 @@ class JackTokenizer:
         for match in re.finditer(STRING_CONST_REGEX, line):
             start_ind, end_ind = match.span()
             curr_string = line[start_ind:end_ind]
-            line = line.replace(curr_string, str(self.__string_counter))
+            line = line.replace(curr_string, QUOTATION_MARK + str(self.__string_counter) + QUOTATION_MARK)
             self.__string_list.append(curr_string)
             self.__string_counter += 1
             return line
@@ -213,9 +213,9 @@ class JackTokenizer:
         is_string_const_match = re.match(STRING_CONST_REGEX, element)
         if is_string_const_match:
             if is_string_const_match.end() >= len(element) - 1:
-
+                element = element.strip(QUOTATION_MARK)
                 # We now replace back the new lines with space chars.
-                element = self.__string_list[int(element)].strip(QUOTATION_MARK)
+                element = self.__string_list[int(element)]
                 self.__token_list.append( (element, STRING_CONST) )
                 return
 
