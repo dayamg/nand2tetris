@@ -283,7 +283,7 @@ def remove_comments_and_stuff(line):
     """
     line = re.sub(COMMENT_PATTERN, '', line)  # remove comments
     tabs_and_new_lines_pattern = re.compile(r"\t*\n*")
-    line = re.sub(tabs_and_new_lines_pattern, '', line)  # remove new lines and tabs
+    line = re.sub(tabs_and_new_lines_pattern, SPACE_CHAR, line)  # remove new lines and tabs
     multiple_spaces_pattern = re.compile(r"  +")
     line = re.sub(multiple_spaces_pattern, SPACE_CHAR, line)  # replaces multiple spaces with only one
 
