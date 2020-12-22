@@ -214,6 +214,7 @@ class JackTokenizer:
                 element = element.strip(QUOTATION_MARK)
                 # We now replace back the new lines with space chars.
                 element = self.__string_list[int(element)]
+                element = element.strip(QUOTATION_MARK)
                 self.__token_list.append( (element, STRING_CONST) )
                 return
 
@@ -285,8 +286,11 @@ def remove_comments_and_stuff(line):
     (Spaces are not removed, as it is important later)
     """
     line = re.sub(COMMENT_PATTERN, '', line)  # remove comments
-    tabs_and_new_lines_pattern = re.compile(r"\t+\n*")
-    line = re.sub(tabs_and_new_lines_pattern, ' ', line)  # remove new lines and tabs
+    tabs_pattern = re.compile(r"\t+")
+    new_line_pattern = re.compile(r"\n*")
+    line = re.sub(tabs_pattern, SPACE_CHAR, line)  # removes tabs
+    line = re.sub(new_line_pattern, '', line)  # removes new lines
+
     multiple_spaces_pattern = re.compile(r"  +")
     line = re.sub(multiple_spaces_pattern, SPACE_CHAR, line)  # replaces multiple spaces with only one
 
