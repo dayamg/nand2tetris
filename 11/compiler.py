@@ -89,15 +89,6 @@ class SymbolTable:
         return self.__get_property(var_name, COUNTER_INDEX)
 
 
-class VMWriter:
-    def __init__(self, output_vm_file):
-        """
-        Emits VM commands into a file, using the VM command syntax.
-        :param output_vm_file: a file output stream (not a path!)
-        """
-        pass
-
-
 if __name__ == "__main__":
     jack_path_input = sys.argv[1]
 
