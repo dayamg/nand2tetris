@@ -299,7 +299,7 @@ def remove_comments_and_stuff(line):
 
 class SyntaxAnalyzer:
 
-    def __init__(self, jack_path_input, xml_path):
+    def __init__(self, jack_path_input, xml_path, vm_file_path):
         """
         Yeah, this funky function is for constructing shit, you know.
         """
@@ -307,6 +307,7 @@ class SyntaxAnalyzer:
         self.__tokenizer = JackTokenizer(jack_file)
         self.__symbols_table = SymbolTable()
         self.__xml_file = xml_path
+        self.__vm_file = open(vm_file_path, READ_MODE)
         self.__xml_tree = None
         self.__class_name = None
         next_token = self.__tokenizer.get_next_token()
@@ -315,7 +316,7 @@ class SyntaxAnalyzer:
             self.__compile_class(self.__xml_tree)
         tree = ElementTree(self.__xml_tree)
         jack_file.close()
-        tree.write(xml_path, pretty_print=TRUE, encoding="utf-8")
+        tree.write(xml_path, pretty_print=True, encoding="utf-8")
 
     def __compile_class(self, xml_tree):
         """
@@ -346,6 +347,7 @@ class SyntaxAnalyzer:
         while tk.get_token_type() == KEYWORD and tk.get_next_token() in [CONSTRUCTOR, FUNCTION, METHOD]:
             self.__compile_subroutine_dec(SubElement(xml_tree, "subroutineDec"))
             # print(self.__symbols_table.get_subroutine_symbol_dict())
+            # print()
 
         # '}'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
