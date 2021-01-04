@@ -5,13 +5,15 @@ import sys
 from lxml.etree import Element, SubElement, ElementTree
 from compiler import SymbolTable
 
-JACK_SUFFIX = ".jack"
-XML_SUFFIX = ".xml"
-READ_MODE = "r"
-WRITE_MODE = "w"
 NEW_LINE = '\n'
 SPACE_CHAR = " "
 EMPTY_STRING = ''
+JACK_SUFFIX = ".jack"
+XML_SUFFIX = ".xml"
+VM_SUFFIX = ".vm"
+READ_MODE = "r"
+WRITE_MODE = "w"
+
 
 # token types constants
 KEYWORD = "keyword"
@@ -321,6 +323,7 @@ class SyntaxAnalyzer:
     def __compile_class(self, xml_tree):
         """
         Build xml tree for a class in jack.
+        Nothing to the vm file.
         """
         tk = self.__tokenizer
 
@@ -356,6 +359,7 @@ class SyntaxAnalyzer:
     def __compile_class_var_dec(self, xml_tree):
         """
         Build xml tree for a class var declaration in jack.
+        Update symbols tables.
         """
         tk = self.__tokenizer
         # 'static/field'(keyword)
@@ -425,9 +429,9 @@ class SyntaxAnalyzer:
         tk.advance()
 
         # 'subroutineBody'
-        self.__compile_subroutine_body(SubElement(xml_tree, "subroutineBody"))
+       # self.__compile_subroutine_body(SubElement(xml_tree, "subroutineBody"))
 
-    def __compile_subroutine_body(self, xml_tree):
+    # def __compile_subroutine_body(self, xml_tree):
         """
         Build xml tree for a subroutine body in jack.
         """
@@ -436,9 +440,13 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
 
+        n_locals = 0
         # varDec*
         while tk.get_token_type() == KEYWORD and tk.get_next_token() == VAR:
-            self.__compile_var_dec(SubElement(xml_tree, "varDec"))
+            n_locals += self.__compile_var_dec(SubElement(xml_tree, "varDec"))
+
+        self.__vm_file.write("function " + self.__class_name + "." + subroutine_name + " " + str(n_locals) + NEW_LINE)
+
         # statements
         self.__compile_statements(SubElement(xml_tree, "statements"))
 
@@ -489,6 +497,7 @@ class SyntaxAnalyzer:
         Build xml tree for a variable declaration in jack.
         """
         tk = self.__tokenizer
+        num_of_vars = 1
 
         # 'var'(keyword)
         var_kind = tk.get_next_token()
@@ -508,6 +517,7 @@ class SyntaxAnalyzer:
 
         # (, varName)*
         while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
+            num_of_vars += 1
             # ','
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
@@ -520,6 +530,7 @@ class SyntaxAnalyzer:
         # ';'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
+        return num_of_vars
 
     def __compile_statements(self, xml_tree):
         """
@@ -791,21 +802,4 @@ class SyntaxAnalyzer:
             tk.advance()
             # expression
             self.__compile_expression(SubElement(xml_tree, 'expression'))
-
-
-if __name__ == "__main__":
-    jack_path_input = sys.argv[1]
-
-    # Check if a file or a directory of vm files.
-    if os.path.isfile(jack_path_input):
-        xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-        SyntaxAnalyzer(jack_path_input, xml_path)
-
-    if os.path.isdir(jack_path_input):
-        jack_path_input = jack_path_input.rstrip('/')
-        for filename in os.listdir(jack_path_input):
-            if filename.endswith(JACK_SUFFIX):
-                filename_jack_path = os.path.join(jack_path_input, filename)
-                xml_path = filename_jack_path.replace(JACK_SUFFIX, XML_SUFFIX)
-                SyntaxAnalyzer(filename_jack_path, xml_path)
 
