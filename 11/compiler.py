@@ -22,6 +22,24 @@ class SymbolTable:
 
         self.__index_counter = 0
 
+    def get_subroutine_symbol_dict(self):
+        """
+        a getter for subroutine_symbol_dict
+        """
+        return self.__subroutine_symbol_dict
+
+    def get_class_symbol_dict(self):
+        """
+        a getter for class_symbol_dict
+        """
+        return self.__class_symbol_dict
+
+    def start_subroutine(self):
+        """
+        Reset the inner dict that handles the subroutine scope.
+        """
+        self.__subroutine_symbol_dict = dict()
+
     def add_new_symbol(self, var_name, var_type, var_kind):
         """
         Adds a new variable to the symbol table. It understands by itself to which table to add.
