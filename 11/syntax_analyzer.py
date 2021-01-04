@@ -5,15 +5,14 @@ import sys
 from lxml.etree import Element, SubElement, ElementTree
 from compiler import SymbolTable
 
-NEW_LINE = '\n'
-SPACE_CHAR = " "
-EMPTY_STRING = ''
 JACK_SUFFIX = ".jack"
 XML_SUFFIX = ".xml"
 VM_SUFFIX = ".vm"
 READ_MODE = "r"
 WRITE_MODE = "w"
-
+NEW_LINE = '\n'
+SPACE_CHAR = " "
+EMPTY_STRING = ''
 
 # token types constants
 KEYWORD = "keyword"
@@ -28,7 +27,6 @@ METHOD = "method"
 FUNCTION = "function"
 CONSTRUCTOR = "constructor"
 FIELD = "field"
-STATIC = "static"
 VAR = "var"
 INT = "int"
 CHAR = "char"
@@ -37,13 +35,22 @@ VOID = "void"
 TRUE = "true"
 FALSE = "false"
 NULL = "null"
-THIS = "this"
 LET = "let"
 DO = "do"
 IF = "if"
 ELSE = "else"
 WHILE = "while"
 RETURN = "return"
+
+# Segments
+CONST = "constant"
+ARG = "argument"
+LOCAL = "local"
+STATIC = "static"  # Also a keyword
+THIS = "this"   # Also a keyword
+THAT = "that"
+POINTER = "pointer"
+TEMP = "temp"
 
 QUOTATION_MARK = "\""
 
@@ -802,4 +809,46 @@ class SyntaxAnalyzer:
             tk.advance()
             # expression
             self.__compile_expression(SubElement(xml_tree, 'expression'))
+
+    def write_term(self, expression):
+        """
+        Writes a term in VM instructions
+        """
+        tk = self.__tokenizer
+
+        # If term is Int Constant, write "push <int value>"
+        if tk.get_token_type() == INT_CONST:
+            self.__write_push(CONST, tk.get_next_token())
+            tk.advance()
+            return
+
+        # If term is string constant, we should push
+        elif tk.get_token_type() == STRING_CONST:
+            pass
+
+
+
+    def __write_push(self, segment, index):
+        """
+        Writes command "push segment index", e.g., "push constant 3" or "push local 0"
+        """
+        self.__vm_file.write("push " + segment + " " + str(index) + NEW_LINE)
+
+    def __write_pop(self, segment, index):
+        """
+        Writes command "pop segment index", e.g., "push constant 3" or "pop local 0"
+        """
+        self.__vm_file.write("pop " + segment + " " + str(index) + NEW_LINE)
+
+    def __write_function(self, func_name, num_of_vars):
+        """
+        Writes commands like "function f k"
+        """
+        self.__vm_file.write("function " + func_name + " " + str(num_of_vars) + NEW_LINE)
+
+    def __write_call(self, func_name, num_of_vars):
+        """
+        Writes commands like "call f k"
+        """
+        self.__vm_file.write("call " + func_name + " " + str(num_of_vars) + NEW_LINE)
 
