@@ -2,7 +2,8 @@ import os
 import re
 import sys
 
-from lxml.etree import Element, SubElement, ElementTree, tostring
+from lxml.etree import Element, SubElement, ElementTree
+from compiler import SymbolTable
 
 JACK_SUFFIX = ".jack"
 XML_SUFFIX = ".xml"
@@ -151,8 +152,6 @@ class JackTokenizer:
             line = remove_multiple_line_comments(line)
             if not line:
                 continue
-
-            # line = self.__replace_spaces_in_string(line)
 
             line_separated_array = line.split(SPACE_CHAR)
             for element in line_separated_array:
@@ -304,17 +303,19 @@ class SyntaxAnalyzer:
         """
         Yeah, this funky function is for constructing shit, you know.
         """
-        self.__tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
+        jack_file = open(jack_path_input, READ_MODE)
+        self.__tokenizer = JackTokenizer(jack_file)
+        self.__symbols_table = SymbolTable()
         self.__xml_file = xml_path
         self.__xml_tree = None
+        self.__class_name = None
         next_token = self.__tokenizer.get_next_token()
         if next_token is not None:
             self.__xml_tree = Element(CLASS)
             self.__compile_class(self.__xml_tree)
         tree = ElementTree(self.__xml_tree)
-        # str = tostring(self.__xml_tree) # pretty_print=True))
-
-        tree.write(xml_path, pretty_print=True, encoding="utf-8")
+        jack_file.close()
+        tree.write(xml_path, pretty_print=TRUE, encoding="utf-8")
 
     def __compile_class(self, xml_tree):
         """
@@ -322,18 +323,29 @@ class SyntaxAnalyzer:
         """
         tk = self.__tokenizer
 
-        # 'class' className '{'
-        for i in range(3):
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
+        # 'class'
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+
+        # className
+        self.__class_name = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+
+        # '{'
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
 
         # classVarDec*
         while tk.get_token_type() == KEYWORD and tk.get_next_token() in [FIELD, STATIC]:
             self.__compile_class_var_dec(SubElement(xml_tree, "classVarDec"))
 
+        # print(self.__symbols_table.get_class_symbol_dict())
+        # print()
         # subroutineDec*
         while tk.get_token_type() == KEYWORD and tk.get_next_token() in [CONSTRUCTOR, FUNCTION, METHOD]:
             self.__compile_subroutine_dec(SubElement(xml_tree, "subroutineDec"))
+            # print(self.__symbols_table.get_subroutine_symbol_dict())
 
         # '}'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -344,10 +356,19 @@ class SyntaxAnalyzer:
         Build xml tree for a class var declaration in jack.
         """
         tk = self.__tokenizer
-        # 'static/field'(keyword), type (keyword/identifier), varName (identifier)
-        for i in range(3):
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
+        # 'static/field'(keyword)
+        var_kind = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+        # type (keyword/identifier)
+        var_type = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+        # varName (identifier)
+        var_name = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+        self.__symbols_table.add_new_symbol(var_name, var_type, var_kind)
 
         # (, varName)*
         while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
@@ -355,8 +376,10 @@ class SyntaxAnalyzer:
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # varName
+            var_name = tk.get_next_token()
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
+            self.__symbols_table.add_new_symbol(var_name, var_type, var_kind)
 
         # ';'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -367,10 +390,30 @@ class SyntaxAnalyzer:
         build xml tree for a subroutine declaration in jack.
         """
         tk = self.__tokenizer
-        # 'constructor/function/method'(keyword), 'void'/type (keyword/identifier), subroutineName (identifier), '('
-        for i in range(4):
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
+        self.__symbols_table.start_subroutine()
+
+        # 'constructor/function/method'(keyword)
+        subroutine_type = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+
+        if subroutine_type == "method":
+            self.__symbols_table.add_new_symbol("this", self.__class_name, "arg")
+
+        # 'void'/type (keyword/identifier)
+        tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+
+        # subroutineName (identifier)
+        subroutine_name = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+
+        # '('
+        tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
 
         # 'parameterList'
         self.__compile_parameter_list(SubElement(xml_tree, "parameterList"))
@@ -412,12 +455,17 @@ class SyntaxAnalyzer:
             xml_tree.text = '\n'
             return
 
+        var_kind = "arg"
+
         # type
+        var_type = tk.get_next_token()
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
         # varName
+        var_name = tk.get_next_token()
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
+        self.__symbols_table.add_new_symbol(var_name, var_type, var_kind)
 
         # (, type varName)*
         while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
@@ -425,21 +473,36 @@ class SyntaxAnalyzer:
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # type
+            var_type = tk.get_next_token()
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # varName
+            var_name = tk.get_next_token()
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
+            self.__symbols_table.add_new_symbol(var_name, var_type, var_kind)
 
     def __compile_var_dec(self, xml_tree):
         """
         Build xml tree for a variable declaration in jack.
         """
         tk = self.__tokenizer
-        # 'var'(keyword), type (keyword/identifier), varName (identifier)
-        for i in range(3):
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
+
+        # 'var'(keyword)
+        var_kind = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+
+        # type (keyword/identifier)
+        var_type = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+
+        # varName (identifier)
+        var_name = tk.get_next_token()
+        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+        tk.advance()
+        self.__symbols_table.add_new_symbol(var_name, var_type, var_kind)
 
         # (, varName)*
         while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
@@ -447,8 +510,10 @@ class SyntaxAnalyzer:
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # varName
+            var_name = tk.get_next_token()
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
+            self.__symbols_table.add_new_symbol(var_name, var_type, var_kind)
 
         # ';'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -732,20 +797,6 @@ if __name__ == "__main__":
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
         xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-
-        # TOKENIZER TEST
-        jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
-        test_file = open("test.xml", WRITE_MODE)
-        test_file.write("<tokens>" + NEW_LINE)
-        while jack_tokenizer.has_more_tokens():
-            xml_line = "<" + str(jack_tokenizer.get_token_type()) + ">" + " " + \
-                       str(jack_tokenizer.get_next_token()) + " </" + str(jack_tokenizer.get_token_type()) + ">" + \
-                       NEW_LINE
-            test_file.write(xml_line)
-            jack_tokenizer.advance()
-        test_file.write("</tokens>" + NEW_LINE)
-        ######
-
         SyntaxAnalyzer(jack_path_input, xml_path)
 
     if os.path.isdir(jack_path_input):
