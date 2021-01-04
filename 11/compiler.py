@@ -1,4 +1,5 @@
 from syntax_analyzer import *
+import os
 
 CLASS_LEVEL_IDENTIFIERS = ["static", "field"]
 SUBROUTINE_LEVEL_IDENTIFIERS = ["arg", "var"]
@@ -6,6 +7,12 @@ SUBROUTINE_LEVEL_IDENTIFIERS = ["arg", "var"]
 TYPE_INDEX = 0
 KIND_INDEX = 1
 COUNTER_INDEX = 2
+
+JACK_SUFFIX = ".jack"
+XML_SUFFIX = ".xml"
+VM_SUFFIX = ".vm"
+READ_MODE = "r"
+WRITE_MODE = "w"
 
 
 class SymbolTable:
@@ -108,22 +115,9 @@ if __name__ == "__main__":
 
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
+        vm_file_path = jack_path_input.replace(JACK_SUFFIX, VM_SUFFIX)
         xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-
-        # TOKENIZER TEST
-        jack_tokenizer = JackTokenizer(open(jack_path_input, READ_MODE))
-        test_file = open("test.xml", WRITE_MODE)
-        test_file.write("<tokens>" + NEW_LINE)
-        while jack_tokenizer.has_more_tokens():
-            xml_line = "<" + str(jack_tokenizer.get_token_type()) + ">" + " " + \
-                       str(jack_tokenizer.get_next_token()) + " </" + str(jack_tokenizer.get_token_type()) + ">" + \
-                       NEW_LINE
-            test_file.write(xml_line)
-            jack_tokenizer.advance()
-        test_file.write("</tokens>" + NEW_LINE)
-        ######
-
-        SyntaxAnalyzer(jack_path_input, xml_path)
+        SyntaxAnalyzer(jack_path_input, xml_path, vm_file_path)
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
@@ -131,5 +125,6 @@ if __name__ == "__main__":
             if filename.endswith(JACK_SUFFIX):
                 filename_jack_path = os.path.join(jack_path_input, filename)
                 xml_path = filename_jack_path.replace(JACK_SUFFIX, XML_SUFFIX)
-                SyntaxAnalyzer(filename_jack_path, xml_path)
+                vm_file_path = filename_jack_path.replace(JACK_SUFFIX, VM_SUFFIX)
+                SyntaxAnalyzer(filename_jack_path, xml_path, vm_file_path)
 
