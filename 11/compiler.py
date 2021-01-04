@@ -15,12 +15,10 @@ class SymbolTable:
         # E.g., {"x": ("int", "local", 2)}.
         # Type is one of int, char, boolean or other class name
         # Kind is one of field, static, local, argument
-        # Index is an inner counter for later use
+        # Index is an inner counter for every kind
 
         # Class symbol table, in the same structure
         self.__class_symbol_dict = dict()
-
-        self.__index_counter = 0
 
     def get_subroutine_symbol_dict(self):
         """
@@ -46,12 +44,10 @@ class SymbolTable:
         """
         # STATIC and FIELD identifiers have a class scope, while ARG and VAR identifiers have a subroutine scope
         if var_kind in CLASS_LEVEL_IDENTIFIERS:
-            self.__class_symbol_dict[var_name] = (var_type, var_kind, self.__index_counter)
-            self.__index_counter += 1
+            self.__class_symbol_dict[var_name] = (var_type, var_kind, self.var_count(var_kind))
 
         elif var_kind in SUBROUTINE_LEVEL_IDENTIFIERS:
-            self.__subroutine_symbol_dict[var_name] = (var_type, var_kind, self.__index_counter)
-            self.__index_counter += 1
+            self.__subroutine_symbol_dict[var_name] = (var_type, var_kind, self.var_count(var_kind))
 
         else:
             # To delete:
