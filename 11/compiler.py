@@ -102,6 +102,12 @@ class SymbolTable:
         """
         return self.__get_property(var_name, COUNTER_INDEX)
 
+    def var_exists(self, var_name):
+        """
+        Returns True if the variable exists in class or subroutine level tables.
+        """
+        return var_name in self.__subroutine_symbol_dict or var_name in self.__class_symbol_dict
+
 
 if __name__ == "__main__":
     jack_path_input = sys.argv[1]

@@ -807,34 +807,95 @@ class SyntaxAnalyzer:
             # expression
             self.__compile_expression(SubElement(xml_tree, 'expression'))
 
-    def write_term(self, expression):
+    def write_expression(self):
         """
         Writes a term in VM instructions
         """
+
         tk = self.__tokenizer
+        current_token = tk.get_next_token()
         current_token_type = tk.get_token_type()
 
         # If term is Int Constant, write "push <int value>"
         if current_token_type == INT_CONST:
-            self.__write_push(CONST, tk.get_next_token())
+            self.__write_comment("writing term, int const: " + current_token)
+            self.__write_push(CONST, current_token)
             tk.advance()
             return
 
-        # If term is string constant, we should push
+        # If term is string constant, we should push each char
         elif current_token_type == STRING_CONST:
-            self.__write_push(CONST, len(tk.get_next_token()))  # Push the argument len(str_const) for String.new()
+            self.__write_comment("writing term, string const: " + current_token)
+            self.__write_push(CONST, len(current_token))  # Push the argument len(str_const) for String.new()
             self.__write_call("String.new", 1)  # Create new string
-            for char in tk.get_next_token():
+            for char in current_token:
                 self.__write_push(CONST, ord(char))  # push one by one the string's chars
                 self.__write_call("String.appendChar", 2)
             tk.advance()
             return
 
+        # If the term is a variable
+        elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token):
+            var_kind = self.__symbols_table.get_kind(current_token)
+            self.__write_comment("writing term, variable: " + current_token + " of kind " + var_kind)
+
+            if var_kind == FIELD:
+                self.__write_push(THIS, self.__symbols_table.get_index(current_token))
+            elif var_kind == STATIC:
+                self.__write_push(STATIC, self.__symbols_table.get_index(current_token))
+            elif var_kind == LOCAL:
+                self.__write_push(LOCAL, self.__symbols_table.get_index(current_token))
+            elif var_kind == ARG:
+                self.__write_push(ARG, self.__symbols_table.get_index(current_token))
+
+            tk.advance()
+            return
+
+        # one of the "macros" true, false, none or this
         elif current_token_type == KEYWORD:
+            self.__write_comment("writing term, keyword: " + current_token)
+            if current_token == FALSE:
+                self.__write_push(CONST, FALSE_VALUE)  # push const 0
+            elif current_token == TRUE:
+                self.__write_push(CONST, TRUE_VALUE)  # push const -1
+            elif current_token == NULL:
+                self.__write_push(CONST, NULL_VALUE)  # push const 0
+            elif current_token == THIS:
+                self.__write_push(POINTER, THIS_POINTER_VALUE) # push pointer 0
+            tk.advance()
+            return
+
+        # '(' expression ')'
+        elif current_token_type == SYMBOL and current_token == '(':
+            self.__write_comment("writing (expression): (")
+            # '('
+            tk.advance()
+            # expression
+            self.write_expression()  # Call itself recursively, evaluate the expression inside the parentheses
+            # ')'
+            self.__write_comment("writing (expression): )")
+            tk.advance()
+            return
+
+        #  ~expression or -expression
+        elif current_token in UNARY_OP_LIST:
+            if current_token_type == '-':
+                tk.advance()
+                self.write_expression()
+                self.__write_arithmetic("neg")
+            else:  # current_token_type == '~'
+                tk.advance()
+                self.write_expression()
+                self.__write_arithmetic("not")
+            tk.advance()
+            return
 
 
-
-
+    def __write_comment(self, comment):
+        """
+        Writes VM comment.
+        """
+        self.__vm_file.write("/// " + comment + NEW_LINE)
 
     def __write_push(self, segment, index):
         """
@@ -859,6 +920,13 @@ class SyntaxAnalyzer:
         Writes commands like "call f k"
         """
         self.__vm_file.write("call " + func_name + " " + str(num_of_vars) + NEW_LINE)
+
+    def __write_arithmetic(self, arit_op):
+        """
+        Writes the command arit_op
+        """
+        self.__vm_file.write(arit_op + NEW_LINE)
+
 
 
 if __name__ == "__main__":
