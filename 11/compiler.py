@@ -113,6 +113,26 @@ class SymbolTable:
         return (var_name in self.__subroutine_symbol_dict) or \
                (var_name in self.__class_symbol_dict)
 
+    def get_all_info(self, var_name):
+        """
+        Returns a triplet (var_type, var_kind, var_index).
+        """
+        if var_name in self.__subroutine_symbol_dict:
+            return self.__subroutine_symbol_dict[var_name]
+
+        # Second, search in the outer scope:
+        elif var_name in self.__class_symbol_dict:
+            return self.__class_symbol_dict[var_name]
+
+        else:
+            return None
+
+    def var_exists(self, var_name):
+        """
+        Returns True if the variable exists in class or subroutine level tables.
+        """
+        return var_name in self.__subroutine_symbol_dict or var_name in self.__class_symbol_dict
+
 
 if __name__ == "__main__":
     jack_path_input = sys.argv[1]

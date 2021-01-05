@@ -52,17 +52,26 @@ THAT = "that"
 POINTER = "pointer"
 TEMP = "temp"
 
+# Jack "Macros"
+FALSE_VALUE = 0
+NULL_VALUE = 0
+TRUE_VALUE = -1
+THIS_POINTER_VALUE = 0
+THAT_POINTER_VALUE = 1
+
 QUOTATION_MARK = "\""
 
-KEY_WORD_DICT = {"CLASS": "class", "METHOD": "method", "FUNCTION": "function", "CONSTRUCTOR": "constructor",
+KEYWORD_DICT = {"CLASS": "class", "METHOD": "method", "FUNCTION": "function", "CONSTRUCTOR": "constructor",
                  "FIELD": "field", "STATIC": "static", "VAR": "var", "INT": "int", "CHAR": "char",
                  "BOOLEAN": "boolean", "VOID": "void", "TRUE": "true", "FALSE": "false", "NULL": "null",
                  "THIS": "this", "LET": "let", "DO": "do", "IF": "if", "ELSE": "else", "WHILE": "while",
                  "RETURN": "return"}
 
-KEY_WORD_LIST = ["class", "method", "function", "constructor", "field", "static", "var", "int", "char",
+KEYWORD_LIST = ["class", "method", "function", "constructor", "field", "static", "var", "int", "char",
                  "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while",
                  "return"]
+
+VAR_KIND_DICT = {"field": THIS, "static": STATIC, "local": LOCAL, "argument": ARG}
 
 KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|static|var|int|char|boolean|void|true"
                                     r"|false|null|this|let|do|if|else|while|return")
@@ -82,6 +91,8 @@ SYMBOLS_LIST = ['{', '}',
                 ]
 
 OP_LIST = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
+OP_CMD_DICT = {'+': "add", '-': "sub", '*': "call Math.multiply 2", '/': "call Math.divide 2", '&': "and", '|': "or",
+                '<': "lt", '>': "gt", '=': "eq"}
 UNARY_OP_LIST = ['~', '-']
 
 SYMBOL_TRANSLATION_DICT = {">": "&gt;", "<": "&lt;", "&": "&amp;", "\'": "&quot;"}
@@ -104,8 +115,8 @@ class JackTokenizer:
         Yeah, this funky function is for constructing shit, you know.
         """
         self.__input_file = input_jack_file  # the input file, of file type
-        self.__next_token = None  # a tuple, (token, token_type). token_type is one of TOKEN_TYPE_DICT keys.
-        self.__next_token_type = None
+        self.__next_token = None  # a tuple, (token, token_type).
+        self.__next_token_type = None  # token_type is one of TOKEN_TYPE_DICT keys.
 
         self.__string_counter = 0
         self.__string_list = []
@@ -205,7 +216,7 @@ class JackTokenizer:
         if element.isspace() or not element:
             return
 
-        if element in KEY_WORD_LIST:
+        if element in KEYWORD_LIST:
             self.__token_list.append((element, KEYWORD))
             return
 
@@ -894,21 +905,173 @@ class SyntaxAnalyzer:
 
         return 0  # TBD!! return number of expressions
 
-    def write_term(self, expression):
+    def write_expression_list(self):
         """
-        Writes a term in VM instructions
+        Writes the VM commands of a list of expressions, assuming that the opening bracket, '(', was already parsed.
+        Returns the number of expressions in the list.
         """
+        self.__write_comment("Parsing expression list. ")
         tk = self.__tokenizer
+        number_of_expressions = 0
+        # check is list is empty, meaning next token is )
+        if tk.get_token_type() == SYMBOL and tk.get_next_token() == ')':
+            tk.advance()
+            return number_of_expressions
+
+        # else, parse first expression, and then loop until over
+        number_of_expressions += 1
+        self.__write_comment("Expression No. # " + str(number_of_expressions))
+        self.write_expression()
+
+        # as long as there are more ',' symbols, there are more expressions in the list to parse
+        while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
+            number_of_expressions += 1
+            self.__write_comment("Expression No. # " + str(number_of_expressions))
+            tk.advance()
+            self.write_expression()
+
+        return number_of_expressions
+
+    def write_term(self):
+        """
+        Writes a term in VM instructions.
+        """
+
+        tk = self.__tokenizer
+        current_token = tk.get_next_token()
+        current_token_type = tk.get_token_type()
 
         # If term is Int Constant, write "push <int value>"
-        if tk.get_token_type() == INT_CONST:
-            self.__write_push(CONST, tk.get_next_token())
+        if current_token_type == INT_CONST:
+            self.__write_comment("writing term, int const: " + current_token)
+            self.__write_push(CONST, current_token)
             tk.advance()
             return
 
-        # If term is string constant, we should push
-        elif tk.get_token_type() == STRING_CONST:
+        # If term is string constant, we should push each char
+        elif current_token_type == STRING_CONST:
+            self.__write_comment("writing term, string const: " + current_token)
+            self.__write_push(CONST, len(current_token))  # Push the argument len(str_const) for String.new()
+            self.__write_call("String.new", 1)  # Create new string
+            for char in current_token:
+                self.__write_push(CONST, ord(char))  # push one by one the string's chars
+                self.__write_call("String.appendChar", 2)
+            tk.advance()
+            return
+
+        # If the term is a variable
+        elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token):
+            var_kind = self.__symbols_table.get_kind(current_token)
+            self.__write_comment("writing term, variable: " + current_token + " of kind " + var_kind)
+
+            if var_kind == FIELD:
+                self.__write_push(THIS, self.__symbols_table.get_index(current_token))
+            elif var_kind == STATIC:
+                self.__write_push(STATIC, self.__symbols_table.get_index(current_token))
+            elif var_kind == LOCAL:
+                self.__write_push(LOCAL, self.__symbols_table.get_index(current_token))
+            elif var_kind == ARG:
+                self.__write_push(ARG, self.__symbols_table.get_index(current_token))
+
+            tk.advance()
+            return
+
+        # one of the "macros" true, false, none or this
+        elif current_token_type == KEYWORD:
+            self.__write_comment("writing term, keyword: " + current_token)
+            if current_token == FALSE:
+                self.__write_push(CONST, FALSE_VALUE)  # push const 0
+            elif current_token == TRUE:
+                self.__write_push(CONST, TRUE_VALUE)  # push const -1
+            elif current_token == NULL:
+                self.__write_push(CONST, NULL_VALUE)  # push const 0
+            elif current_token == THIS:
+                self.__write_push(POINTER, THIS_POINTER_VALUE) # push pointer 0
+            tk.advance()
+            return
+
+        # '(' expression ')'
+        elif current_token_type == SYMBOL and current_token == '(':
+            self.__write_comment("writing (expression): (")
+            # '('
+            tk.advance()
+            # expression
+            self.write_expression()  # Calls itself recursively, evaluate the expression inside the parentheses
+            # ')'
+            self.__write_comment("writing (expression): )")
+            tk.advance()
+            return
+
+        #  ~expression or -expression
+        elif current_token in UNARY_OP_LIST:
+            self.__write_comment("writing unary operation: " + current_token)
+
+            if current_token_type == '-':
+                tk.advance()
+                self.write_term()
+                self.__write_arithmetic("neg")
+            else:  # current_token_type == '~'
+                tk.advance()
+                self.write_term()
+                self.__write_arithmetic("not")
+            tk.advance()
+            return
+
+        #  method(exp1, exp2, ..., expn) or Class.func(exp1,...,expn)
+        elif current_token_type == IDENTIFIER:
+            self.write_subroutine_call()
+
+        elif current_token_type == SYMBOL and current_token == '[':
+            # Arrays - TBD
             pass
+
+    def write_subroutine_call(self):
+        """
+        Compiles a call for a subroutine, func(x1,...,xn) or Class.func(x1,...,xn)
+        """
+        tk = self.__tokenizer
+        func_name_prefix = tk.get_next_token()
+        tk.advance()
+
+        # Checks if the function is of type Class.func or obj.func
+        if tk.get_next_token() == '.':
+            if self.__symbols_table.var_exists(func_name_prefix):
+                # In case it is a call through an object, e.g., game.run():
+                tk.advance()
+                func_name = func_name_prefix + '.' + tk.get_next_token()  # Update func name to be "obj.func"
+                var_type, var_kind, var_index = self.__symbols_table.get_all_info(func_name_prefix)
+
+                # First, push the object, while converting var_kind (field, static, local, argument)
+                # into the corresponding segment:
+                self.__write_push(VAR_KIND_DICT[var_kind], var_index)
+
+
+        # Now parse the argument list
+        num_of_args = self.write_expression_list()
+        if num_of_args == 0:
+            self.__write_push(CONST, '0')  # In case of void function, push 0
+
+
+    def write_expression(self):
+        """
+        Writes an expression, by writing terms until there is no more operators. Assumes the expression is not empty.
+        """
+        tk = self.__tokenizer
+        self.write_term()  # Writes the first term in < term (operator term)* >
+        while tk.get_token_type() == SYMBOL and tk.get_next_token() in OP_LIST:
+            binary_op = tk.get_next_token()
+            tk.advance()
+            self.write_term()  # Writes the second term in < term (operator term)* >
+
+            # Write arithmetic cmd - translate ['+', '-', '*', '/', '&', '|', '<', '>', '='] into VM cmd,
+            # using the OP_CMD_DICT
+            self.__vm_file.write(OP_CMD_DICT[binary_op] + NEW_LINE)
+
+    def __write_comment(self, comment):
+        """
+        Writes VM comment.
+        """
+        self.__vm_file.write("/// " + comment + NEW_LINE)
 
     def __write_push(self, segment, index):
         """
@@ -933,4 +1096,11 @@ class SyntaxAnalyzer:
         Writes commands like "call f k"
         """
         self.__vm_file.write("call " + func_name + " " + str(num_of_vars) + NEW_LINE)
+
+    def __write_arithmetic(self, arit_op):
+        """
+        Writes the command arit_op
+        """
+        self.__vm_file.write(arit_op + NEW_LINE)
+
 
