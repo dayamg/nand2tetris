@@ -890,7 +890,6 @@ class SyntaxAnalyzer:
             tk.advance()
             return
 
-
     def __write_comment(self, comment):
         """
         Writes VM comment.
