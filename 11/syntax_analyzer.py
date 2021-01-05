@@ -70,6 +70,8 @@ KEYWORD_LIST = ["class", "method", "function", "constructor", "field", "static",
                  "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while",
                  "return"]
 
+VAR_KIND_DICT = {"field": THIS, "static": STATIC, "local": LOCAL, "argument": ARG}
+
 KEY_WORD_REGEX_PATTERN = re.compile(r"class|method|function|constructor|field|static|var|int|char|boolean|void|true"
                                     r"|false|null|this|let|do|if|else|while|return")
 KEY_WORD_NO_SPACE_PATTERN = re.compile(r"true|false|null|this|if|else|while|return")
@@ -809,6 +811,33 @@ class SyntaxAnalyzer:
             # expression
             self.__compile_expression(SubElement(xml_tree, 'expression'))
 
+    def write_expression_list(self):
+        """
+        Writes the VM commands of a list of expressions, assuming that the opening bracket, '(', was already parsed.
+        Returns the number of expressions in the list.
+        """
+        self.__write_comment("Parsing expression list. ")
+        tk = self.__tokenizer
+        number_of_expressions = 0
+        # check is list is empty, meaning next token is )
+        if tk.get_token_type() == SYMBOL and tk.get_next_token() == ')':
+            tk.advance()
+            return number_of_expressions
+
+        # else, parse first expression, and then loop until over
+        number_of_expressions += 1
+        self.__write_comment("Expression No. # " + str(number_of_expressions))
+        self.write_expression()
+
+        # as long as there are more ',' symbols, there are more expressions in the list to parse
+        while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
+            number_of_expressions += 1
+            self.__write_comment("Expression No. # " + str(number_of_expressions))
+            tk.advance()
+            self.write_expression()
+
+        return number_of_expressions
+
     def write_term(self):
         """
         Writes a term in VM instructions.
@@ -896,7 +925,38 @@ class SyntaxAnalyzer:
 
         #  method(exp1, exp2, ..., expn) or Class.func(exp1,...,expn)
         elif current_token_type == IDENTIFIER:
+            self.write_subroutine_call()
+
+        elif current_token_type == SYMBOL and current_token == '[':
+            # Arrays - TBD
             pass
+
+    def write_subroutine_call(self):
+        """
+        Compiles a call for a subroutine, func(x1,...,xn) or Class.func(x1,...,xn)
+        """
+        tk = self.__tokenizer
+        func_name_prefix = tk.get_next_token()
+        tk.advance()
+
+        # Checks if the function is of type Class.func or obj.func
+        if tk.get_next_token() == '.':
+            if self.__symbols_table.var_exists(func_name_prefix):
+                # In case it is a call through an object, e.g., game.run():
+                tk.advance()
+                func_name = func_name_prefix + '.' + tk.get_next_token()  # Update func name to be "obj.func"
+                var_type, var_kind, var_index = self.__symbols_table.get_all_info(func_name_prefix)
+
+                # First, push the object, while converting var_kind (field, static, local, argument)
+                # into the corresponding segment:
+                self.__write_push(VAR_KIND_DICT[var_kind], var_index)
+
+
+        # Now parse the argument list
+        num_of_args = self.write_expression_list()
+        if num_of_args == 0:
+            self.__write_push(CONST, '0')  # In case of void function, push 0
+
 
     def write_expression(self):
         """
@@ -909,7 +969,7 @@ class SyntaxAnalyzer:
             tk.advance()
             self.write_term()  # Writes the second term in < term (operator term)* >
 
-            # Write arithmetic cmd - translate ['+', '-', '*', '/', '&', '|', '<', '>', '='] into VM cmd
+            # Write arithmetic cmd - translate ['+', '-', '*', '/', '&', '|', '<', '>', '='] into VM cmd,
             # using the OP_CMD_DICT
             self.__vm_file.write(OP_CMD_DICT[binary_op] + NEW_LINE)
 
