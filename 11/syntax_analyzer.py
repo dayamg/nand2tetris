@@ -51,15 +51,22 @@ THAT = "that"
 POINTER = "pointer"
 TEMP = "temp"
 
+# Jack "Macros"
+FALSE_VALUE = 0
+NULL_VALUE = 0
+TRUE_VALUE = -1
+THIS_POINTER_VALUE = 0
+THAT_POINTER_VALUE = 1
+
 QUOTATION_MARK = "\""
 
-KEY_WORD_DICT = {"CLASS": "class", "METHOD": "method", "FUNCTION": "function", "CONSTRUCTOR": "constructor",
+KEYWORD_DICT = {"CLASS": "class", "METHOD": "method", "FUNCTION": "function", "CONSTRUCTOR": "constructor",
                  "FIELD": "field", "STATIC": "static", "VAR": "var", "INT": "int", "CHAR": "char",
                  "BOOLEAN": "boolean", "VOID": "void", "TRUE": "true", "FALSE": "false", "NULL": "null",
                  "THIS": "this", "LET": "let", "DO": "do", "IF": "if", "ELSE": "else", "WHILE": "while",
                  "RETURN": "return"}
 
-KEY_WORD_LIST = ["class", "method", "function", "constructor", "field", "static", "var", "int", "char",
+KEYWORD_LIST = ["class", "method", "function", "constructor", "field", "static", "var", "int", "char",
                  "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while",
                  "return"]
 
@@ -103,8 +110,8 @@ class JackTokenizer:
         Yeah, this funky function is for constructing shit, you know.
         """
         self.__input_file = input_jack_file  # the input file, of file type
-        self.__next_token = None  # a tuple, (token, token_type). token_type is one of TOKEN_TYPE_DICT keys.
-        self.__next_token_type = None
+        self.__next_token = None  # a tuple, (token, token_type).
+        self.__next_token_type = None  # token_type is one of TOKEN_TYPE_DICT keys.
 
         self.__string_counter = 0
         self.__string_list = []
@@ -204,7 +211,7 @@ class JackTokenizer:
         if element.isspace() or not element:
             return
 
-        if element in KEY_WORD_LIST:
+        if element in KEYWORD_LIST:
             self.__token_list.append((element, KEYWORD))
             return
 
@@ -805,16 +812,27 @@ class SyntaxAnalyzer:
         Writes a term in VM instructions
         """
         tk = self.__tokenizer
+        current_token_type = tk.get_token_type()
 
         # If term is Int Constant, write "push <int value>"
-        if tk.get_token_type() == INT_CONST:
+        if current_token_type == INT_CONST:
             self.__write_push(CONST, tk.get_next_token())
             tk.advance()
             return
 
         # If term is string constant, we should push
-        elif tk.get_token_type() == STRING_CONST:
-            pass
+        elif current_token_type == STRING_CONST:
+            self.__write_push(CONST, len(tk.get_next_token()))  # Push the argument len(str_const) for String.new()
+            self.__write_call("String.new", 1)  # Create new string
+            for char in tk.get_next_token():
+                self.__write_push(CONST, ord(char))  # push one by one the string's chars
+                self.__write_call("String.appendChar", 2)
+            tk.advance()
+            return
+
+        elif current_token_type == KEYWORD:
+
+
 
 
 
