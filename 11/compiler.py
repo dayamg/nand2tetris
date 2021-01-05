@@ -2,7 +2,7 @@ from syntax_analyzer import *
 import os
 
 CLASS_LEVEL_IDENTIFIERS = ["static", "field"]
-SUBROUTINE_LEVEL_IDENTIFIERS = ["arg", "var"]
+SUBROUTINE_LEVEL_IDENTIFIERS = ["argument", "var"]
 
 TYPE_INDEX = 0
 KIND_INDEX = 1
@@ -108,6 +108,10 @@ class SymbolTable:
         In case there is no such variable, it returns None.
         """
         return self.__get_property(var_name, COUNTER_INDEX)
+
+    def is_in(self, var_name):
+        return (var_name in self.__subroutine_symbol_dict) or \
+               (var_name in self.__class_symbol_dict)
 
 
 if __name__ == "__main__":
