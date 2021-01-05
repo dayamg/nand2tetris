@@ -411,7 +411,7 @@ class SyntaxAnalyzer:
         tk.advance()
 
         if subroutine_type == "method":
-            self.__symbols_table.add_new_symbol("this", self.__class_name, "arg")
+            self.__symbols_table.add_new_symbol("this", self.__class_name, ARG)
 
         # 'void'/type (keyword/identifier)
         tk.get_next_token()
@@ -436,9 +436,9 @@ class SyntaxAnalyzer:
         tk.advance()
 
         # 'subroutineBody'
-       # self.__compile_subroutine_body(SubElement(xml_tree, "subroutineBody"))
+        # self.__compile_subroutine_body(SubElement(xml_tree, "subroutineBody"))
 
-    # def __compile_subroutine_body(self, xml_tree):
+        # def __compile_subroutine_body(self, xml_tree):
         """
         Build xml tree for a subroutine body in jack.
         """
@@ -452,7 +452,19 @@ class SyntaxAnalyzer:
         while tk.get_token_type() == KEYWORD and tk.get_next_token() == VAR:
             n_locals += self.__compile_var_dec(SubElement(xml_tree, "varDec"))
 
-        self.__vm_file.write("function " + self.__class_name + "." + subroutine_name + " " + str(n_locals) + NEW_LINE)
+        full_name = self.__class_name + "." + subroutine_name
+        self.__write_function(full_name, str(n_locals))
+
+        if subroutine_type == CONSTRUCTOR:
+            # Allocate memory for class instance and init THIS segment.
+            self.__write_push(CONST, self.__symbols_table.var_count(FIELD))
+            self.__write_call("Memory.alloc", 1)
+            self.__write_pop(POINTER, 0)
+
+        if subroutine_type == METHOD:
+            # Init THIS segment.
+            self.__write_push(ARG, 0)
+            self.__write_pop(POINTER, 0)
 
         # statements
         self.__compile_statements(SubElement(xml_tree, "statements"))
@@ -464,6 +476,7 @@ class SyntaxAnalyzer:
     def __compile_parameter_list(self, xml_tree):
         """
         Build xml tree for a parameter list in jack.
+        Update symbol table.
         """
         tk = self.__tokenizer
 
@@ -472,7 +485,7 @@ class SyntaxAnalyzer:
             xml_tree.text = '\n'
             return
 
-        var_kind = "arg"
+        var_kind = ARG
 
         # type
         var_type = tk.get_next_token()
@@ -502,6 +515,7 @@ class SyntaxAnalyzer:
     def __compile_var_dec(self, xml_tree):
         """
         Build xml tree for a variable declaration in jack.
+        Update symbol table.
         """
         tk = self.__tokenizer
         num_of_vars = 1
@@ -542,6 +556,7 @@ class SyntaxAnalyzer:
     def __compile_statements(self, xml_tree):
         """
         Build xml tree for statements in jack.
+        Nothing to write to vm file.
         """
         tk = self.__tokenizer
         # check is list is empty, meaning next token is }
@@ -571,15 +586,19 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
         # subroutineName/(className/varName)
+        first_name = tk.get_next_token()
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
         # subroutineCall
-        self.__compile_subroutine_call(xml_tree)  # No SubElement!
+        self.__compile_subroutine_call(xml_tree, first_name)  # No SubElement!
+        # remove unnecessary returned value
+        self.__write_pop(TEMP, 0)
+
         # ';'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
 
-    def __compile_subroutine_call(self, xml_tree):
+    def __compile_subroutine_call(self, xml_tree, first_token):
         """
         Build xml tree for subroutine call in jack.
         First token of the identifier subroutineName/(className/varName) should be out already.
@@ -591,15 +610,43 @@ class SyntaxAnalyzer:
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # subroutineName
+            subroutine_name = tk.get_next_token()
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
+
+            if self.__symbols_table.is_in(first_token):
+                is_method = 1
+                # If first token is a variable, then this subroutine is its method.
+                # We need to insert its this address as the first argument to the vm stack.
+                var_kind = self.__symbols_table.get_kind(first_token)
+                var_index = self.__symbols_table.get_index(first_token)
+                self.__write_push(var_kind, var_index)
+
+                # Now we need the class name for the vm call write.
+                class_name = self.__symbols_table.get_type(first_token)
+
+            else:
+                # The first token is a class name (using function).
+                is_method = 0
+                class_name = first_token
+
+            full_name = class_name + "." + subroutine_name
+
+        else:
+            # first_token is a subroutine of this instance.
+            is_method = 1
+            # Push this address as first argument.
+            self.__write_push(POINTER, 0)
+            full_name = self.__class_name + "." + first_token
 
         # '('
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
 
         # expressionList
-        self.__compile_expression_list(SubElement(xml_tree, "expressionList"))
+        n_args = self.__compile_expression_list(SubElement(xml_tree, "expressionList"))
+
+        self.__write_call(full_name, n_args + is_method)
 
         # ')'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -614,10 +661,17 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
         # varName
+        var_name = tk.get_next_token()
+        var_kind = self.__symbols_table.get_kind(var_name)
+        var_index = self.__symbols_table.get_index(var_name)
+
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
 
+        # Check if it is an array assignment.
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == '[':
+            # Calc where to store the result, push start arr address.
+            self.__write_push(var_kind, var_index)
             # '['
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
@@ -626,12 +680,31 @@ class SyntaxAnalyzer:
             # ']'
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
+            self.__vm_file.write("add")
+            # '='
+            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+            tk.advance()
+            # expression
+            self.__compile_expression(SubElement(xml_tree, "expression"))
 
-        # '='
-        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-        tk.advance()
-        # expression
-        self.__compile_expression(SubElement(xml_tree, "expression"))
+            # Pop the value to be assign to temp 0
+            self.__write_pop(TEMP, 0)
+            # Pop the array address to pointer 1, meaning store at That segment.
+            self.__write_pop(POINTER, 1)
+            # Push the value to be assign back to the stack.
+            self.__write_push(TEMP, 0)
+            # Pop it to the correct place in the array, which that 0 is pointing to
+            self.__write_pop(THAT, 0)
+
+        else:
+            # '='
+            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
+            tk.advance()
+            # expression
+            self.__compile_expression(SubElement(xml_tree, "expression"))
+            # Pop the value to be assign to the var_name location.
+            self.__write_pop(var_kind, var_index)
+
         # ';'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
@@ -669,9 +742,17 @@ class SyntaxAnalyzer:
         # 'return'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
+
+        # If a value is returned, return it.
         if not (tk.get_next_token() == ';'):
             # expression
             self.__compile_expression(SubElement(xml_tree, "expression"))
+            self.__vm_file.write(RETURN)
+
+        # If no value is returned, return 0.
+        self.__write_push(CONST, 0)
+        self.__vm_file.write(RETURN)
+
         # ';'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
@@ -769,6 +850,7 @@ class SyntaxAnalyzer:
 
         if tk.get_token_type() == IDENTIFIER:
             # varName/ subroutineName
+            first_name = tk.get_next_token()
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
 
@@ -787,7 +869,7 @@ class SyntaxAnalyzer:
             # subroutineCall
             if tk.get_token_type() == SYMBOL and tk.get_next_token() in ['(', '.']:
                 # subroutineCall
-                self.__compile_subroutine_call(xml_tree)  # No SubElement!
+                self.__compile_subroutine_call(xml_tree, first_name)  # No SubElement!
                 return
 
     def __compile_expression_list(self, xml_tree):
@@ -810,6 +892,8 @@ class SyntaxAnalyzer:
             # expression
             self.__compile_expression(SubElement(xml_tree, 'expression'))
 
+        return 0  # TBD!! return number of expressions
+
     def write_term(self, expression):
         """
         Writes a term in VM instructions
@@ -825,8 +909,6 @@ class SyntaxAnalyzer:
         # If term is string constant, we should push
         elif tk.get_token_type() == STRING_CONST:
             pass
-
-
 
     def __write_push(self, segment, index):
         """
