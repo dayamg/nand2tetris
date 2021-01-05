@@ -879,6 +879,8 @@ class SyntaxAnalyzer:
 
         #  ~expression or -expression
         elif current_token in UNARY_OP_LIST:
+            self.__write_comment("writing unary operation: " + current_token)
+
             if current_token_type == '-':
                 tk.advance()
                 self.write_expression()
