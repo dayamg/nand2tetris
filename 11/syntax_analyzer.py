@@ -88,6 +88,8 @@ SYMBOLS_LIST = ['{', '}',
                 ]
 
 OP_LIST = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
+OP_CMD_DICT = {'+': "add", '-': "sub", '*': "call Math.multiply 2", '/': "call Math.divide 2", '&': "and", '|': "or",
+                '<': "lt", '>': "gt", '=': "eq"}
 UNARY_OP_LIST = ['~', '-']
 
 SYMBOL_TRANSLATION_DICT = {">": "&gt;", "<": "&lt;", "&": "&amp;", "\'": "&quot;"}
@@ -871,7 +873,7 @@ class SyntaxAnalyzer:
             # '('
             tk.advance()
             # expression
-            self.write_term()  # Call itself recursively, evaluate the expression inside the parentheses
+            self.write_expression()  # Calls itself recursively, evaluate the expression inside the parentheses
             # ')'
             self.__write_comment("writing (expression): )")
             tk.advance()
@@ -891,6 +893,25 @@ class SyntaxAnalyzer:
                 self.__write_arithmetic("not")
             tk.advance()
             return
+
+        #  method(exp1, exp2, ..., expn) or Class.func(exp1,...,expn)
+        elif current_token_type == IDENTIFIER:
+            pass
+
+    def write_expression(self):
+        """
+        Writes an expression, by writing terms until there is no more operators. Assumes the expression is not empty.
+        """
+        tk = self.__tokenizer
+        self.write_term()  # Writes the first term in < term (operator term)* >
+        while tk.get_token_type() == SYMBOL and tk.get_next_token() in OP_LIST:
+            binary_op = tk.get_next_token()
+            tk.advance()
+            self.write_term()  # Writes the second term in < term (operator term)* >
+
+            # Write arithmetic cmd - translate ['+', '-', '*', '/', '&', '|', '<', '>', '='] into VM cmd
+            # using the OP_CMD_DICT
+            self.__vm_file.write(OP_CMD_DICT[binary_op] + NEW_LINE)
 
     def __write_comment(self, comment):
         """
