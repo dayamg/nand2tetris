@@ -807,9 +807,9 @@ class SyntaxAnalyzer:
             # expression
             self.__compile_expression(SubElement(xml_tree, 'expression'))
 
-    def write_expression(self):
+    def write_term(self):
         """
-        Writes a term in VM instructions
+        Writes a term in VM instructions.
         """
 
         tk = self.__tokenizer
@@ -871,7 +871,7 @@ class SyntaxAnalyzer:
             # '('
             tk.advance()
             # expression
-            self.write_expression()  # Call itself recursively, evaluate the expression inside the parentheses
+            self.write_term()  # Call itself recursively, evaluate the expression inside the parentheses
             # ')'
             self.__write_comment("writing (expression): )")
             tk.advance()
@@ -883,11 +883,11 @@ class SyntaxAnalyzer:
 
             if current_token_type == '-':
                 tk.advance()
-                self.write_expression()
+                self.write_term()
                 self.__write_arithmetic("neg")
             else:  # current_token_type == '~'
                 tk.advance()
-                self.write_expression()
+                self.write_term()
                 self.__write_arithmetic("not")
             tk.advance()
             return
