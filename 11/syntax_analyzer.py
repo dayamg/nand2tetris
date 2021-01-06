@@ -320,7 +320,7 @@ class SyntaxAnalyzer:
         """
         Returns true if the next token is in form of var[], where var is in the symbols table.
         """
-        return self.__symbols_table.var_exists(self.__tokenizer.get_next_token()) and self.__tokenizer.peek() == '['
+        return self.__symbols_table.var_exists(self.__tokenizer.get_next_token()) and self.__tokenizer.peek(1) == '['
 
     def __compile_array_evaluation(self):
         """
@@ -334,9 +334,6 @@ class SyntaxAnalyzer:
         # varName
         var_name = tk.get_next_token()
         var_type, var_kind, var_index = self.__symbols_table.get_all_info(var_name)
-
-        # Calculate where to store the result, push start arr address.
-        self.__write_push(VAR_KIND_DICT[var_kind], var_index)
         tk.advance()  # current token is the var name, now the current token is '['
 
         # '['
@@ -345,13 +342,14 @@ class SyntaxAnalyzer:
         self.write_expression()
         # ']'
         tk.advance()
+        # Calculate where to store the result, push start arr address.
+        self.__write_push(VAR_KIND_DICT[var_kind], var_index)
         self.__write_arithmetic("add")
 
     def __compile_let(self):
         """
-        Build xml tree for let statement in jack.
+        Compile let statement.
         """
-
         tk = self.__tokenizer
         # 'let'
         tk.advance()
@@ -360,7 +358,12 @@ class SyntaxAnalyzer:
         var_type, var_kind, var_index = self.__symbols_table.get_all_info(var_name)
 
         if VM_COMMENTS:
-            self.__write_comment("Compiling let statement: " + var_name)
+            comment = "Compiling let statement: "
+            i = 0
+            while tk.peek(i) and not tk.peek(i) == ';':
+                comment = comment + str(tk.peek(i))
+                i += 1
+            self.__write_comment(comment)
 
         # Check if it is an array assignment.
         if self.__is_next_token_array():
@@ -553,10 +556,7 @@ class SyntaxAnalyzer:
             return
 
         # Array expression
-        elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token) \
-                and self.__tokenizer.peek() == '[':
-            if VM_COMMENTS:
-                self.__write_comment("Compiling array term")
+        elif self.__is_next_token_array():
             self.__compile_array_evaluation()
 
         # If the term is a variable, and NOT an array:

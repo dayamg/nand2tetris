@@ -106,14 +106,14 @@ class JackTokenizer:
             return self.__next_token[0]
         return None
 
-    def peek(self):
-        self.__token_index += 1
+    def peek(self, how_far):
+        self.__token_index += how_far
         if self.has_more_tokens():
-            self.__next_token = self.__token_list[self.__token_index+1]
-            self.__token_index -= 1
+            self.__next_token = self.__token_list[self.__token_index]
+            self.__token_index -= how_far
             return self.__next_token[0]
 
-        self.__token_index -= 1
+        self.__token_index -= how_far
         return None
 
     def get_token_type(self):
