@@ -270,7 +270,8 @@ class SyntaxAnalyzer:
         Build xml tree for subroutine call in jack.
         First token of the identifier subroutineName/(className/varName) should be out already.
         """
-        self.__write_comment("Compiling subroutine call. ")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling subroutine call. ")
 
         tk = self.__tokenizer
 

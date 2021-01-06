@@ -1,6 +1,6 @@
 import re
 
-VM_COMMENTS = 1
+VM_COMMENTS = 0
 
 CLASS_LEVEL_IDENTIFIERS = ["static", "field"]
 SUBROUTINE_LEVEL_IDENTIFIERS = ["argument", "local"]
