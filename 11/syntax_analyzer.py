@@ -17,8 +17,8 @@ class SyntaxAnalyzer:
         self.__symbols_table = SymbolTable()
         self.__vm_file = open(vm_file_path, WRITE_MODE)
         self.__class_name = None
-        self.__while_statement_cnt = 0
-        self.__if_statement_cnt = 0
+        self.__while_statement_cnt = -1
+        self.__if_statement_cnt = -1
         next_token = self.__tokenizer.get_next_token()
         if next_token is not None:
             self.__compile_class()
@@ -30,7 +30,9 @@ class SyntaxAnalyzer:
         Build xml tree for a class in jack.
         Nothing to the vm file.
         """
-        self.__write_comment("Compiling class.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling class.")
+
         tk = self.__tokenizer
 
         # 'class'
@@ -57,7 +59,9 @@ class SyntaxAnalyzer:
         Build xml tree for a class var declaration in jack.
         Update symbols tables.
         """
-        self.__write_comment("Compiling class var dec.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling class var dec.")
+
         tk = self.__tokenizer
         # 'static/field'(keyword)
         var_kind = tk.get_next_token()
@@ -86,7 +90,9 @@ class SyntaxAnalyzer:
         """
         build xml tree for a subroutine declaration in jack.
         """
-        self.__write_comment("Compiling subroutine_dec.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling subroutine_dec.")
+
         tk = self.__tokenizer
         self.__symbols_table.start_subroutine()
 
@@ -144,7 +150,9 @@ class SyntaxAnalyzer:
         Build xml tree for a parameter list in jack.
         Update symbol table.
         """
-        self.__write_comment("Compiling parameter list.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling parameter list.")
+
         tk = self.__tokenizer
 
         # check is list is empty, meaning next token is )
@@ -178,7 +186,9 @@ class SyntaxAnalyzer:
         Build xml tree for a variable declaration in jack.
         Update symbol table.
         """
-        self.__write_comment("Compiling var dec.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling var dec.")
+
         tk = self.__tokenizer
         num_of_vars = 1
 
@@ -214,7 +224,9 @@ class SyntaxAnalyzer:
         Build xml tree for statements in jack.
         Nothing to write to vm file.
         """
-        self.__write_comment("Compiling statements.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling statements.")
+
         tk = self.__tokenizer
         # check is list is empty, meaning next token is }
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == '}':
@@ -237,7 +249,9 @@ class SyntaxAnalyzer:
         """
         Build xml tree for do statement in jack.
         """
-        self.__write_comment("Compiling do statement.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling do statement.")
+
         tk = self.__tokenizer
         # 'do'
         tk.advance()
@@ -256,7 +270,9 @@ class SyntaxAnalyzer:
         Build xml tree for subroutine call in jack.
         First token of the identifier subroutineName/(className/varName) should be out already.
         """
-        self.__write_comment("Compiling subroutine call.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling subroutine call.")
+
         tk = self.__tokenizer
 
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == '.':
@@ -265,7 +281,8 @@ class SyntaxAnalyzer:
             # subroutineName
             subroutine_name = tk.get_next_token()
             tk.advance()
-            self.__write_comment("Compiling subroutine call to " + subroutine_name)
+            if VM_COMMENTS:
+                self.__write_comment("Compiling subroutine call to " + subroutine_name)
 
             if self.__symbols_table.var_exists(first_token):
                 is_method = 1
@@ -312,7 +329,9 @@ class SyntaxAnalyzer:
         """
         Compiles the evaluation part of an array expression.
         """
-        self.__write_comment("Compiling array evaluation.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling array evaluation.")
+
         tk = self.__tokenizer
 
         # varName
@@ -335,7 +354,9 @@ class SyntaxAnalyzer:
         """
         Build xml tree for let statement in jack.
         """
-        self.__write_comment("Compiling let statement.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling let statement.")
+
         tk = self.__tokenizer
         # 'let'
         tk.advance()
@@ -376,10 +397,12 @@ class SyntaxAnalyzer:
         """
         Build xml tree for while statement in jack.
         """
-        self.__write_comment("Compiling while statement.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling while statement.")
+
         tk = self.__tokenizer
         self.__while_statement_cnt += 1
-        self.__write_label("START_WHILE_" + str(self.__while_statement_cnt))
+        self.__write_label("WHILE_EX" + str(self.__while_statement_cnt))
         # 'while'
         tk.advance()
         # '('
@@ -389,13 +412,13 @@ class SyntaxAnalyzer:
         # ')'
         tk.advance()
         self.__write_arithmetic("not")
-        self.__write_if_goto("END_WHILE_" + str(self.__while_statement_cnt))
+        self.__write_if_goto("WHILE_END" + str(self.__while_statement_cnt))
         # '{'
         tk.advance()
         # statements
         self.__compile_statements()
-        self.__write_go_to("START_WHILE_" + str(self.__while_statement_cnt))
-        self.__write_label("END_WHILE_" + str(self.__while_statement_cnt))
+        self.__write_go_to("WHILE_EXP" + str(self.__while_statement_cnt))
+        self.__write_label("WHILE_END" + str(self.__while_statement_cnt))
         # '}'
         tk.advance()
 
@@ -403,7 +426,9 @@ class SyntaxAnalyzer:
         """
         Build xml tree for return statement in jack.
         """
-        self.__write_comment("Compiling return statement. ")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling return statement. ")
+
         tk = self.__tokenizer
         # 'return'
         tk.advance()
@@ -425,7 +450,9 @@ class SyntaxAnalyzer:
         """
         Build xml tree for if statement in jack.
         """
-        self.__write_comment("Compiling if statement.")
+        if VM_COMMENTS:
+            self.__write_comment("Compiling if statement.")
+
         tk = self.__tokenizer
         self.__if_statement_cnt += 1
         # 'if'
@@ -435,17 +462,19 @@ class SyntaxAnalyzer:
         # expression
         self.write_expression_list()
         self.__write_arithmetic("not")
-        self.__write_if_goto("ELSE_" + str(self.__if_statement_cnt))
+        self.__write_if_goto("IF_TRUE" + str(self.__if_statement_cnt))
+        self.__write_go_to("IF_FALSE" + str(self.__if_statement_cnt))
+        self.__write_label("IF_TRUE" + str(self.__if_statement_cnt))
         # ')'
         tk.advance()
         # '{'
         tk.advance()
         # statements
         self.__compile_statements()
-        self.__write_go_to("END_IF_" + str(self.__if_statement_cnt))
+        self.__write_go_to("IF_END" + str(self.__if_statement_cnt))
+        self.__write_label("IF_FALSE" + str(self.__if_statement_cnt))
         # '}'
         tk.advance()
-        self.__write_label("ELSE_" + str(self.__if_statement_cnt))
         # ('else''{'statements'}')?
         if tk.get_token_type() == KEYWORD and tk.get_next_token() == ELSE:
             # 'else'
@@ -456,14 +485,16 @@ class SyntaxAnalyzer:
             self.__compile_statements()
             # '}'
             tk.advance()
-        self.__write_label("END_IF_" + str(self.__if_statement_cnt))
+        self.__write_label("IF_END" + str(self.__if_statement_cnt))
 
     def write_expression_list(self):
         """
         Writes the VM commands of a list of expressions, assuming that the opening bracket, '(', was already parsed.
         Returns the number of expressions in the list.
         """
-        self.__write_comment("Parsing expression list. ")
+        if VM_COMMENTS:
+            self.__write_comment("Parsing expression list. ")
+
         tk = self.__tokenizer
         number_of_expressions = 0
         # check is list is empty, meaning next token is )
@@ -473,13 +504,16 @@ class SyntaxAnalyzer:
 
         # else, parse first expression, and then loop until over
         number_of_expressions += 1
-        self.__write_comment("Expression No. # " + str(number_of_expressions))
+        if VM_COMMENTS:
+            self.__write_comment("Expression No. # " + str(number_of_expressions))
+
         self.write_expression()
 
         # as long as there are more ',' symbols, there are more expressions in the list to parse
         while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
             number_of_expressions += 1
-            self.__write_comment("Expression No. # " + str(number_of_expressions))
+            if VM_COMMENTS:
+                self.__write_comment("Expression No. # " + str(number_of_expressions))
             tk.advance()
             self.write_expression()
 
@@ -496,14 +530,16 @@ class SyntaxAnalyzer:
 
         # If term is Int Constant, write "push <int value>"
         if current_token_type == INT_CONST:
-            self.__write_comment("writing term, int const: " + str(current_token))
+            if VM_COMMENTS:
+                self.__write_comment("writing term, int const: " + str(current_token))
             self.__write_push(CONST, current_token)
             tk.advance()
             return
 
         # If term is string constant, we should push each char
         elif current_token_type == STRING_CONST:
-            self.__write_comment("writing term, string const: " + current_token)
+            if VM_COMMENTS:
+                self.__write_comment("writing term, string const: " + current_token)
             self.__write_push(CONST, len(current_token))  # Push the argument len(str_const) for String.new()
             self.__write_call("String.new", 1)  # Create new string
             for char in current_token:
@@ -519,7 +555,8 @@ class SyntaxAnalyzer:
         # If the term is a variable, and NOT an array:
         elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token):
             var_kind = self.__symbols_table.get_kind(current_token)
-            self.__write_comment("writing term, variable: " + current_token + " of kind " + var_kind)
+            if VM_COMMENTS:
+                self.__write_comment("writing term, variable: " + current_token + " of kind " + var_kind)
 
             if var_kind == FIELD:
                 self.__write_push(THIS, self.__symbols_table.get_index(current_token))
@@ -535,7 +572,8 @@ class SyntaxAnalyzer:
 
         # one of the "macros" true, false, none or this
         elif current_token_type == KEYWORD:
-            self.__write_comment("writing term, keyword: " + current_token)
+            if VM_COMMENTS:
+                self.__write_comment("writing term, keyword: " + current_token)
             if current_token == FALSE:
                 self.__write_push(CONST, FALSE_VALUE)  # push const 0
             elif current_token == TRUE:
@@ -549,19 +587,22 @@ class SyntaxAnalyzer:
 
         # '(' expression ')'
         elif current_token_type == SYMBOL and current_token == '(':
-            self.__write_comment("writing (expression): (")
+            if VM_COMMENTS:
+                self.__write_comment("writing (expression): (")
             # '('
             tk.advance()
             # expression
             self.write_expression()  # Calls itself recursively, evaluate the expression inside the parentheses
             # ')'
-            self.__write_comment("writing (expression): )")
+            if VM_COMMENTS:
+                self.__write_comment("writing (expression): )")
             tk.advance()
             return
 
         #  ~expression or -expression
         elif current_token in UNARY_OP_LIST:
-            self.__write_comment("writing unary operation: " + current_token)
+            if VM_COMMENTS:
+                self.__write_comment("writing unary operation: " + current_token)
 
             if current_token_type == '-':
                 tk.advance()
@@ -576,7 +617,8 @@ class SyntaxAnalyzer:
 
         #  method(exp1, exp2, ..., expn) or Class.func(exp1,...,expn)
         elif current_token_type == IDENTIFIER:
-            self.__write_comment("Writing function, " + str(tk.get_next_token()))
+            if VM_COMMENTS:
+                self.__write_comment("Writing function, " + str(tk.get_next_token()))
             self.__compile_subroutine_call(current_token)
 
     def write_expression(self):
@@ -584,7 +626,8 @@ class SyntaxAnalyzer:
         Writes an expression, by writing terms until there is no more operators. Assumes the expression is not empty.
         """
         tk = self.__tokenizer
-        self.__write_comment("Writing expression, " + str(tk.get_next_token()))
+        if VM_COMMENTS:
+            self.__write_comment("Writing expression, " + str(tk.get_next_token()))
         self.write_term()  # Writes the first term in < term (operator term)* >
         while tk.get_token_type() == SYMBOL and tk.get_next_token() in OP_LIST:
             binary_op = tk.get_next_token()
