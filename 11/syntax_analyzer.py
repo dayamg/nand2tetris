@@ -17,8 +17,8 @@ class SyntaxAnalyzer:
         self.__symbols_table = SymbolTable()
         self.__vm_file = open(vm_file_path, WRITE_MODE)
         self.__class_name = None
-        self.__while_statement_cnt = -1
-        self.__if_statement_cnt = -1
+        self.__while_statement_cnt = 0
+        self.__if_statement_cnt = 0
         next_token = self.__tokenizer.get_next_token()
         if next_token is not None:
             self.__compile_class()
@@ -405,8 +405,9 @@ class SyntaxAnalyzer:
             self.__write_comment("Compiling while statement.")
 
         tk = self.__tokenizer
+        while_counter = self.__while_statement_cnt
         self.__while_statement_cnt += 1
-        self.__write_label("WHILE_EXP" + str(self.__while_statement_cnt))
+        self.__write_label("WHILE_EXP" + str(while_counter))
         # 'while'
         tk.advance()
         # '('
@@ -417,13 +418,13 @@ class SyntaxAnalyzer:
         tk.advance()
 
         self.__write_arithmetic("not")
-        self.__write_if_goto("WHILE_END" + str(self.__while_statement_cnt))
+        self.__write_if_goto("WHILE_END" + str(while_counter))
         # '{'
         tk.advance()
         # statements
         self.__compile_statements()
-        self.__write_go_to("WHILE_EXP" + str(self.__while_statement_cnt))
-        self.__write_label("WHILE_END" + str(self.__while_statement_cnt))
+        self.__write_go_to("WHILE_EXP" + str(while_counter))
+        self.__write_label("WHILE_END" + str(while_counter))
         # '}'
         tk.advance()
 
@@ -463,6 +464,7 @@ class SyntaxAnalyzer:
             self.__write_comment("Compiling if statement.")
 
         tk = self.__tokenizer
+        if_counter = self.__if_statement_cnt
         self.__if_statement_cnt += 1
         # 'if'
         tk.advance()
@@ -472,22 +474,21 @@ class SyntaxAnalyzer:
         self.write_expression_list()
         if VM_COMMENTS:
             self.__write_comment("start if algorithm.")
-        # self.__write_arithmetic("not")
-        self.__write_if_goto("IF_TRUE" + str(self.__if_statement_cnt))
-        self.__write_go_to("IF_FALSE" + str(self.__if_statement_cnt))
-        self.__write_label("IF_TRUE" + str(self.__if_statement_cnt))
+        self.__write_if_goto("IF_TRUE" + str(if_counter))
+        self.__write_go_to("IF_FALSE" + str(if_counter))
+        self.__write_label("IF_TRUE" + str(if_counter))
         # ')'
         tk.advance()
         # '{'
         tk.advance()
         # statements
         self.__compile_statements()
-        self.__write_go_to("IF_END" + str(self.__if_statement_cnt))
-        self.__write_label("IF_FALSE" + str(self.__if_statement_cnt))
         # '}'
         tk.advance()
         # ('else''{'statements'}')?
         if tk.get_token_type() == KEYWORD and tk.get_next_token() == ELSE:
+            self.__write_go_to("IF_END" + str(if_counter))
+            self.__write_label("IF_FALSE" + str(if_counter))
             # 'else'
             tk.advance()
             # '{'
@@ -496,7 +497,10 @@ class SyntaxAnalyzer:
             self.__compile_statements()
             # '}'
             tk.advance()
-        self.__write_label("IF_END" + str(self.__if_statement_cnt))
+            self.__write_label("IF_END" + str(if_counter))
+        # No else in jack file.
+        else:
+            self.__write_label("IF_FALSE" + str(if_counter))
 
     def write_expression_list(self):
         """
