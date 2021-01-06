@@ -562,7 +562,7 @@ class SyntaxAnalyzer:
             self.__write_pop(POINTER, 1)
             self.__write_push(THAT, 0)
 
-        # If the term is a variable, and NOT an array:
+        # If the term is a variable, and NOT an array and Not a function:
         elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token)\
                 and not tk.peek(1) == '.':
             var_kind = self.__symbols_table.get_kind(current_token)
