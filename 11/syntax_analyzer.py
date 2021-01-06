@@ -270,9 +270,6 @@ class SyntaxAnalyzer:
         Build xml tree for subroutine call in jack.
         First token of the identifier subroutineName/(className/varName) should be out already.
         """
-        if VM_COMMENTS:
-            self.__write_comment("Compiling subroutine call.")
-
         tk = self.__tokenizer
 
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == '.':
@@ -354,8 +351,6 @@ class SyntaxAnalyzer:
         """
         Build xml tree for let statement in jack.
         """
-        if VM_COMMENTS:
-            self.__write_comment("Compiling let statement.")
 
         tk = self.__tokenizer
         # 'let'
@@ -363,6 +358,9 @@ class SyntaxAnalyzer:
         # varName
         var_name = tk.get_next_token()
         var_type, var_kind, var_index = self.__symbols_table.get_all_info(var_name)
+
+        if VM_COMMENTS:
+            self.__write_comment("Compiling let statement: " + var_name)
 
         # Check if it is an array assignment.
         if self.__is_next_token_array():
@@ -411,6 +409,7 @@ class SyntaxAnalyzer:
         self.write_expression()
         # ')'
         tk.advance()
+
         self.__write_arithmetic("not")
         self.__write_if_goto("WHILE_END" + str(self.__while_statement_cnt))
         # '{'
@@ -438,8 +437,12 @@ class SyntaxAnalyzer:
             # expression
             self.write_expression_list()
             self.__write_return()
+            tk.advance()
+            return
 
         # If no value is returned, return 0.
+        if VM_COMMENTS:
+            self.__write_comment("No value is returned, so return 0 ")
         self.__write_push(CONST, 0)
         self.__write_return()
 
@@ -463,7 +466,7 @@ class SyntaxAnalyzer:
         self.write_expression_list()
         if VM_COMMENTS:
             self.__write_comment("start if algorithm.")
-        self.__write_arithmetic("not")
+        # self.__write_arithmetic("not")
         self.__write_if_goto("IF_TRUE" + str(self.__if_statement_cnt))
         self.__write_go_to("IF_FALSE" + str(self.__if_statement_cnt))
         self.__write_label("IF_TRUE" + str(self.__if_statement_cnt))
@@ -550,7 +553,10 @@ class SyntaxAnalyzer:
             return
 
         # Array expression
-        elif self.__is_next_token_array():
+        elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token) \
+                and self.__tokenizer.peek() == '[':
+            if VM_COMMENTS:
+                self.__write_comment("Compiling array term")
             self.__compile_array_evaluation()
 
         # If the term is a variable, and NOT an array:
@@ -579,7 +585,7 @@ class SyntaxAnalyzer:
                 self.__write_push(CONST, FALSE_VALUE)  # push const 0
             elif current_token == TRUE:
                 self.__write_push(CONST, FALSE_VALUE)  # push const 0
-                self.__write_arithmetic("neg")  # neg
+                self.__write_arithmetic("not")  # neg
             elif current_token == NULL:
                 self.__write_push(CONST, NULL_VALUE)  # push const 0
             elif current_token == THIS:

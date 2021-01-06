@@ -131,6 +131,8 @@ if __name__ == "__main__":
         for filename in os.listdir(jack_path_input):
             if filename.endswith(JACK_SUFFIX):
                 filename_jack_path = os.path.join(jack_path_input, filename)
-                vm_file_path = filename_jack_path.replace(JACK_SUFFIX, VM_SUFFIX)
+
+                # TO BE DELETED - added "OUR" to our VM code
+                vm_file_path = filename_jack_path.replace(JACK_SUFFIX, "OUR" + VM_SUFFIX)
                 SyntaxAnalyzer(filename_jack_path, vm_file_path)
 
