@@ -36,6 +36,17 @@ class JackTokenizer:
             return self.__next_token[0]
         return None
 
+    def peek(self):
+        self.__token_index += 1
+        if self.has_more_tokens():
+            self.__next_token = self.__token_list[self.__token_index+1]
+            self.__token_index -= 1
+            return self.__next_token[0]
+
+        self.__token_index -= 1
+        return None
+
+
     def get_token_type(self):
         """
         Another getter. Type is in one of the elements of TOKEN_TYPE_DICT.

@@ -107,7 +107,6 @@ NO_CURR_TOKEN_INDEX = -1
 g_in_multiple_line_comments = False
 
 
-
 def remove_multiple_line_comments(line):
     """
     Assume no constant srings with a comment in it is inside.
@@ -174,11 +173,7 @@ def remove_comments_and_stuff(line):
 
 
 class SyntaxAnalyzer:
-
     def __init__(self, jack_path_input, xml_path, vm_file_path):
-        """
-        Yeah, this funky function is for constructing shit, you know.
-        """
         jack_file = open(jack_path_input, READ_MODE)
         self.__tokenizer = JackTokenizer(jack_file)
         self.__symbols_table = SymbolTable()
@@ -457,7 +452,7 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
         # subroutineCall
-        self.__compile_subroutine_call(xml_tree, first_name)  # No SubElement!
+        self.__compile_subroutine_call(first_name)  # No SubElement!
         # remove unnecessary returned value
         self.__write_pop(TEMP, 0)
 
@@ -465,7 +460,7 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
 
-    def __compile_subroutine_call(self, xml_tree, first_token):
+    def __compile_subroutine_call(self, first_token):
         """
         Build xml tree for subroutine call in jack.
         First token of the identifier subroutineName/(className/varName) should be out already.
@@ -474,12 +469,11 @@ class SyntaxAnalyzer:
 
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == '.':
             # '.'
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # subroutineName
             subroutine_name = tk.get_next_token()
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
+            self.__write_comment("Compiling subroutine call to " + subroutine_name)
 
             if self.__symbols_table.is_in(first_token):
                 is_method = 1
@@ -507,22 +501,49 @@ class SyntaxAnalyzer:
             full_name = self.__class_name + "." + first_token
 
         # '('
-        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
 
         # expressionList
-        n_args = self.__compile_expression_list(SubElement(xml_tree, "expressionList"))
+        n_args = self.write_expression_list()
 
         self.__write_call(full_name, n_args + is_method)
 
-        # ')'
-        SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
+
+    def __is_next_token_array(self):
+        """
+        Returns true if the next token is in form of var[], where var is in the symbols table.
+        """
+        return self.__symbols_table.var_exists(self.__tokenizer.get_next_token()) and self.__tokenizer.peek() == '['
+
+    def __compile_array_evaluation(self):
+        """
+        Compiles the evaluation part of an array expression.
+        """
+        self.__write_comment("Compiling array evaluation.")
+        tk = self.__tokenizer
+
+        # varName
+        var_name = tk.get_next_token()
+        var_type, var_kind, var_index = self.__symbols_table.get_all_info(var_name)
+
+        # Calculate where to store the result, push start arr address.
+        self.__write_push(VAR_KIND_DICT[var_kind], var_index)
+        tk.advance()  # current token is the var name, now the current token is '['
+
+        # '['
+        tk.advance()
+        # expression
+        self.write_expression()
+        # ']'
+        tk.advance()
+        self.__write_arithmetic("add")
 
     def __compile_let(self, xml_tree):
         """
         Build xml tree for let statement in jack.
         """
+        self.__write_comment("Compiling let.")
         tk = self.__tokenizer
         # 'let'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -536,23 +557,13 @@ class SyntaxAnalyzer:
         tk.advance()
 
         # Check if it is an array assignment.
-        if tk.get_token_type() == SYMBOL and tk.get_next_token() == '[':
-            # Calc where to store the result, push start arr address.
-            self.__write_push(var_kind, var_index)
-            # '['
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            # expression
-            self.__compile_expression(SubElement(xml_tree, "expression"))
-            # ']'
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            self.__vm_file.write("add")
+        if self.__is_next_token_array():
+            self.__compile_array_evaluation()
             # '='
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # expression
-            self.__compile_expression(SubElement(xml_tree, "expression"))
+            self.write_expression()
 
             # Pop the value to be assign to temp 0
             self.__write_pop(TEMP, 0)
@@ -568,7 +579,7 @@ class SyntaxAnalyzer:
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
             # expression
-            self.__compile_expression(SubElement(xml_tree, "expression"))
+            self.write_expression()
             # Pop the value to be assign to the var_name location.
             self.__write_pop(var_kind, var_index)
 
@@ -580,6 +591,7 @@ class SyntaxAnalyzer:
         """
         Build xml tree for while statement in jack.
         """
+        self.__write_comment("Compiling while.")
         tk = self.__tokenizer
         # 'while'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -588,7 +600,7 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
         # expression
-        self.__compile_expression(SubElement(xml_tree, "expression"))
+        self.write_expression()
         # ')'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
@@ -605,6 +617,7 @@ class SyntaxAnalyzer:
         """
         Build xml tree for return statement in jack.
         """
+        self.__write_comment("Compiling return. ")
         tk = self.__tokenizer
         # 'return'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -613,7 +626,7 @@ class SyntaxAnalyzer:
         # If a value is returned, return it.
         if not (tk.get_next_token() == ';'):
             # expression
-            self.__compile_expression(SubElement(xml_tree, "expression"))
+            self.write_expression_list()
             self.__vm_file.write(RETURN)
 
         # If no value is returned, return 0.
@@ -628,6 +641,7 @@ class SyntaxAnalyzer:
         """
         Build xml tree for if statement in jack.
         """
+        self.__write_comment("Compiling if.")
         tk = self.__tokenizer
         # 'if'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
@@ -636,7 +650,7 @@ class SyntaxAnalyzer:
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
         # expression
-        self.__compile_expression(SubElement(xml_tree, "expression"))
+        self.write_expression_list()
         # ')'
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
         tk.advance()
@@ -661,105 +675,6 @@ class SyntaxAnalyzer:
             # '}'
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
-
-    def __compile_expression(self, xml_tree):
-        """
-        Build xml tree for an expression in jack.
-        """
-        tk = self.__tokenizer
-        # term
-        self.__compile_term(SubElement(xml_tree, "term"))
-        while tk.get_token_type() == SYMBOL and tk.get_next_token() in OP_LIST:
-            # op
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            # term
-            self.__compile_term(SubElement(xml_tree, "term"))
-
-    def __compile_term(self, xml_tree):
-        """
-        Build xml tree for a term in jack.
-        """
-        tk = self.__tokenizer
-
-        # unaryOp term
-        if tk.get_next_token() in UNARY_OP_LIST:
-            # unaryOp
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            # term
-            self.__compile_term(SubElement(xml_tree, "term"))
-            return
-
-        # integerConstant/stringConstant
-        if tk.get_token_type() in [INT_CONST, STRING_CONST]:
-            SubElement(xml_tree, tk.get_token_type()).text = str(tk.get_next_token())
-            tk.advance()
-            return
-
-        # keywordConstant
-        if tk.get_next_token() in [TRUE, FALSE, NULL, THIS]:
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            return
-
-        # '(' expression ')'
-        if tk.get_token_type() == SYMBOL and tk.get_next_token() == '(':
-            # '('
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            # expression
-            self.__compile_expression(SubElement(xml_tree, "expression"))
-            # ')'
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            return
-
-        if tk.get_token_type() == IDENTIFIER:
-            # varName/ subroutineName
-            first_name = tk.get_next_token()
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-
-            # '[' expression ']'
-            if tk.get_token_type() == SYMBOL and tk.get_next_token() == '[':
-                # '['
-                SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-                tk.advance()
-                # expression
-                self.__compile_expression(SubElement(xml_tree, "expression"))
-                # ']'
-                SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-                tk.advance()
-                return
-
-            # subroutineCall
-            if tk.get_token_type() == SYMBOL and tk.get_next_token() in ['(', '.']:
-                # subroutineCall
-                self.__compile_subroutine_call(xml_tree, first_name)  # No SubElement!
-                return
-
-    def __compile_expression_list(self, xml_tree):
-        """
-        Build xml tree for expression list in jack.
-        """
-        tk = self.__tokenizer
-        # check is list is empty, meaning next token is )
-        if tk.get_token_type() == SYMBOL and tk.get_next_token() == ')':
-            xml_tree.text = '\n'
-            return
-
-        # expression
-        self.__compile_expression(SubElement(xml_tree, 'expression'))
-        # (, expression)*
-        while tk.get_token_type() == SYMBOL and tk.get_next_token() == ',':
-            # ','
-            SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-            tk.advance()
-            # expression
-            self.__compile_expression(SubElement(xml_tree, 'expression'))
-
-        return 0  # TBD!! return number of expressions
 
     def write_expression_list(self):
         """
@@ -815,7 +730,11 @@ class SyntaxAnalyzer:
             tk.advance()
             return
 
-        # If the term is a variable
+        # Array expression
+        elif self.__is_next_token_array():
+            self.__compile_array_evaluation()
+
+        # If the term is a variable, and NOT an array:
         elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token):
             var_kind = self.__symbols_table.get_kind(current_token)
             self.__write_comment("writing term, variable: " + current_token + " of kind " + var_kind)
@@ -842,7 +761,7 @@ class SyntaxAnalyzer:
             elif current_token == NULL:
                 self.__write_push(CONST, NULL_VALUE)  # push const 0
             elif current_token == THIS:
-                self.__write_push(POINTER, THIS_POINTER_VALUE) # push pointer 0
+                self.__write_push(POINTER, THIS_POINTER_VALUE)  # push pointer 0
             tk.advance()
             return
 
@@ -875,37 +794,7 @@ class SyntaxAnalyzer:
 
         #  method(exp1, exp2, ..., expn) or Class.func(exp1,...,expn)
         elif current_token_type == IDENTIFIER:
-            self.write_subroutine_call()
-
-        elif current_token_type == SYMBOL and current_token == '[':
-            # Arrays - TBD
-            pass
-
-    def write_subroutine_call(self):
-        """
-        Compiles a call for a subroutine, func(x1,...,xn) or Class.func(x1,...,xn)
-        """
-        tk = self.__tokenizer
-        func_name_prefix = tk.get_next_token()
-        tk.advance()
-
-        # Checks if the function is of type Class.func or obj.func
-        if tk.get_next_token() == '.':
-            if self.__symbols_table.var_exists(func_name_prefix):
-                # In case it is a call through an object, e.g., game.run():
-                tk.advance()
-                func_name = func_name_prefix + '.' + tk.get_next_token()  # Update func name to be "obj.func"
-                var_type, var_kind, var_index = self.__symbols_table.get_all_info(func_name_prefix)
-
-                # First, push the object, while converting var_kind (field, static, local, argument)
-                # into the corresponding segment:
-                self.__write_push(VAR_KIND_DICT[var_kind], var_index)
-
-
-        # Now parse the argument list
-        num_of_args = self.write_expression_list()
-        if num_of_args == 0:
-            self.__write_push(CONST, '0')  # In case of void function, push 0
+            self.__compile_subroutine_call(current_token)
 
 
     def write_expression(self):
@@ -958,5 +847,4 @@ class SyntaxAnalyzer:
         Writes the command arit_op
         """
         self.__vm_file.write(arit_op + NEW_LINE)
-
 
