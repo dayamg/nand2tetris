@@ -44,10 +44,6 @@ class SymbolTable:
         elif var_kind in SUBROUTINE_LEVEL_IDENTIFIERS:
             self.__subroutine_symbol_dict[var_name] = (var_type, var_kind, self.var_count(var_kind))
 
-        else:
-            # To delete:
-            print('Not a valid kind; var name:', var_name, 'var type:', var_type, 'var kind:', var_kind)
-
     def var_count(self, var_kind):
         """
         Returns the number of variables of the given kind already defined in the current scope.
@@ -133,7 +129,6 @@ if __name__ == "__main__":
             if filename.endswith(JACK_SUFFIX):
                 filename_jack_path = os.path.join(jack_path_input, filename)
 
-                # TO BE DELETED - added "OUR" to our VM code
-                vm_file_path = filename_jack_path.replace(JACK_SUFFIX, "OUR" + VM_SUFFIX)
+                vm_file_path = filename_jack_path.replace(JACK_SUFFIX, VM_SUFFIX)
                 SyntaxAnalyzer(filename_jack_path, vm_file_path)
 

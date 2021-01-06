@@ -1,0 +1,23 @@
+dayamg, roy.shtoyerman
+===============================================================================
+Daya Matok Gawi, ID 311143051, daya.matokgawi@mail.huji.ac.il
+Royee Shtoyerman, ID 318903713, roy.shtoyerman@mail.huji.ac.il
+===============================================================================
+
+                           Project 11 - Compilation
+                           ------------------------
+
+Submitted Files
+---------------
+README - This fantastic file.
+compiler.py - The main part - compiler.
+tokenizer.py - The tokenizer part.
+constants.py - Helper file with constants, duh...
+syntax_analyzer.py - The Python file that does most of the job.
+Makefile - The "black box" make program that runs the assembler.
+JackCompiler - The make program that runs the python file.
+
+Remarks
+"I used the stones to destroy the stones"
+- Thanos
+-------
