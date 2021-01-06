@@ -706,11 +706,9 @@ class SyntaxAnalyzer:
         tk.advance()
         # varName
         var_name = tk.get_next_token()
-        var_kind = self.__symbols_table.get_kind(var_name)
-        var_index = self.__symbols_table.get_index(var_name)
+        var_type, var_kind, var_index = self.__symbols_table.get_all_info(var_name)
 
         SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
-        tk.advance()
 
         # Check if it is an array assignment.
         if self.__is_next_token_array():
@@ -731,6 +729,7 @@ class SyntaxAnalyzer:
             self.__write_pop(THAT, 0)
 
         else:
+            tk.advance()
             # '='
             SubElement(xml_tree, tk.get_token_type()).text = tk.get_next_token()
             tk.advance()
@@ -950,6 +949,7 @@ class SyntaxAnalyzer:
 
         #  method(exp1, exp2, ..., expn) or Class.func(exp1,...,expn)
         elif current_token_type == IDENTIFIER:
+            self.__write_comment("Writing function, " + str(tk.get_next_token()))
             self.__compile_subroutine_call(current_token)
 
     def write_expression(self):
@@ -957,6 +957,7 @@ class SyntaxAnalyzer:
         Writes an expression, by writing terms until there is no more operators. Assumes the expression is not empty.
         """
         tk = self.__tokenizer
+        self.__write_comment("Writing expression, " + str(tk.get_next_token()))
         self.write_term()  # Writes the first term in < term (operator term)* >
         while tk.get_token_type() == SYMBOL and tk.get_next_token() in OP_LIST:
             binary_op = tk.get_next_token()
