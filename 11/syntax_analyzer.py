@@ -403,7 +403,7 @@ class SyntaxAnalyzer:
 
         tk = self.__tokenizer
         self.__while_statement_cnt += 1
-        self.__write_label("WHILE_EX" + str(self.__while_statement_cnt))
+        self.__write_label("WHILE_EXP" + str(self.__while_statement_cnt))
         # 'while'
         tk.advance()
         # '('
@@ -530,7 +530,6 @@ class SyntaxAnalyzer:
         """
         Writes a term in VM instructions.
         """
-
         tk = self.__tokenizer
         current_token = tk.get_next_token()
         current_token_type = tk.get_token_type()
@@ -558,6 +557,8 @@ class SyntaxAnalyzer:
         # Array expression
         elif self.__is_next_token_array():
             self.__compile_array_evaluation()
+            self.__write_pop(POINTER, 1)
+            self.__write_push(THAT, 0)
 
         # If the term is a variable, and NOT an array:
         elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token):
