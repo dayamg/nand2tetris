@@ -270,6 +270,8 @@ class SyntaxAnalyzer:
         Build xml tree for subroutine call in jack.
         First token of the identifier subroutineName/(className/varName) should be out already.
         """
+        self.__write_comment("Compiling subroutine call. ")
+
         tk = self.__tokenizer
 
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == '.':
@@ -561,7 +563,8 @@ class SyntaxAnalyzer:
             self.__write_push(THAT, 0)
 
         # If the term is a variable, and NOT an array:
-        elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token):
+        elif current_token_type == IDENTIFIER and self.__symbols_table.var_exists(current_token)\
+                and not tk.peek(1) == '.':
             var_kind = self.__symbols_table.get_kind(current_token)
             if VM_COMMENTS:
                 self.__write_comment("writing term, variable: " + current_token + " of kind " + var_kind)
