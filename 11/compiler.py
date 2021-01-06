@@ -1,18 +1,6 @@
 from syntax_analyzer import *
+from constants import *
 import os
-
-CLASS_LEVEL_IDENTIFIERS = ["static", "field"]
-SUBROUTINE_LEVEL_IDENTIFIERS = ["argument", "var"]
-
-TYPE_INDEX = 0
-KIND_INDEX = 1
-COUNTER_INDEX = 2
-
-JACK_SUFFIX = ".jack"
-XML_SUFFIX = ".xml"
-VM_SUFFIX = ".vm"
-READ_MODE = "r"
-WRITE_MODE = "w"
 
 
 class SymbolTable:
@@ -109,10 +97,6 @@ class SymbolTable:
         """
         return self.__get_property(var_name, COUNTER_INDEX)
 
-    def is_in(self, var_name):
-        return (var_name in self.__subroutine_symbol_dict) or \
-               (var_name in self.__class_symbol_dict)
-
     def get_all_info(self, var_name):
         """
         Returns a triplet (var_type, var_kind, var_index).
@@ -140,15 +124,13 @@ if __name__ == "__main__":
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
         vm_file_path = jack_path_input.replace(JACK_SUFFIX, VM_SUFFIX)
-        xml_path = jack_path_input.replace(JACK_SUFFIX, XML_SUFFIX)
-        SyntaxAnalyzer(jack_path_input, xml_path, vm_file_path)
+        SyntaxAnalyzer(jack_path_input, vm_file_path)
 
     if os.path.isdir(jack_path_input):
         jack_path_input = jack_path_input.rstrip('/')
         for filename in os.listdir(jack_path_input):
             if filename.endswith(JACK_SUFFIX):
                 filename_jack_path = os.path.join(jack_path_input, filename)
-                xml_path = filename_jack_path.replace(JACK_SUFFIX, XML_SUFFIX)
                 vm_file_path = filename_jack_path.replace(JACK_SUFFIX, VM_SUFFIX)
-                SyntaxAnalyzer(filename_jack_path, xml_path, vm_file_path)
+                SyntaxAnalyzer(filename_jack_path, vm_file_path)
 
