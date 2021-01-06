@@ -3,7 +3,7 @@ import re
 VM_COMMENTS = 1
 
 CLASS_LEVEL_IDENTIFIERS = ["static", "field"]
-SUBROUTINE_LEVEL_IDENTIFIERS = ["argument", "var"]
+SUBROUTINE_LEVEL_IDENTIFIERS = ["argument", "local"]
 
 TYPE_INDEX = 0
 KIND_INDEX = 1
