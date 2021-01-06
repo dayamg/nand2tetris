@@ -193,7 +193,7 @@ class SyntaxAnalyzer:
         num_of_vars = 1
 
         # 'var'(keyword)
-        var_kind = tk.get_next_token()
+        var_kind = LOCAL
         tk.advance()
 
         # type (keyword/identifier)
@@ -314,9 +314,9 @@ class SyntaxAnalyzer:
 
         # expressionList
         n_args = self.write_expression_list()
-
         self.__write_call(full_name, n_args + is_method)
 
+        # ')'
         tk.advance()
 
     def __is_next_token_array(self):
@@ -388,7 +388,7 @@ class SyntaxAnalyzer:
             # expression
             self.write_expression()
             # Pop the value to be assign to the var_name location.
-            self.__write_pop(var_kind, var_index)
+            self.__write_pop(VAR_KIND_DICT[var_kind], var_index)
 
         # ';'
         tk.advance()
@@ -437,11 +437,11 @@ class SyntaxAnalyzer:
         if not (tk.get_next_token() == ';'):
             # expression
             self.write_expression_list()
-            self.__vm_file.write(RETURN)
+            self.__write_return()
 
         # If no value is returned, return 0.
         self.__write_push(CONST, 0)
-        self.__vm_file.write(RETURN)
+        self.__write_return()
 
         # ';'
         tk.advance()
@@ -461,6 +461,8 @@ class SyntaxAnalyzer:
         tk.advance()
         # expression
         self.write_expression_list()
+        if VM_COMMENTS:
+            self.__write_comment("start if algorithm.")
         self.__write_arithmetic("not")
         self.__write_if_goto("IF_TRUE" + str(self.__if_statement_cnt))
         self.__write_go_to("IF_FALSE" + str(self.__if_statement_cnt))
@@ -499,14 +501,13 @@ class SyntaxAnalyzer:
         number_of_expressions = 0
         # check is list is empty, meaning next token is )
         if tk.get_token_type() == SYMBOL and tk.get_next_token() == ')':
-            tk.advance()
+            # tk.advance()
             return number_of_expressions
 
         # else, parse first expression, and then loop until over
         number_of_expressions += 1
         if VM_COMMENTS:
             self.__write_comment("Expression No. # " + str(number_of_expressions))
-
         self.write_expression()
 
         # as long as there are more ',' symbols, there are more expressions in the list to parse
@@ -577,7 +578,8 @@ class SyntaxAnalyzer:
             if current_token == FALSE:
                 self.__write_push(CONST, FALSE_VALUE)  # push const 0
             elif current_token == TRUE:
-                self.__write_push(CONST, TRUE_VALUE)  # push const -1
+                self.__write_push(CONST, FALSE_VALUE)  # push const 0
+                self.__write_arithmetic("neg")  # neg
             elif current_token == NULL:
                 self.__write_push(CONST, NULL_VALUE)  # push const 0
             elif current_token == THIS:
@@ -593,9 +595,9 @@ class SyntaxAnalyzer:
             tk.advance()
             # expression
             self.write_expression()  # Calls itself recursively, evaluate the expression inside the parentheses
-            # ')'
             if VM_COMMENTS:
                 self.__write_comment("writing (expression): )")
+            # ')'
             tk.advance()
             return
 
@@ -604,21 +606,22 @@ class SyntaxAnalyzer:
             if VM_COMMENTS:
                 self.__write_comment("writing unary operation: " + current_token)
 
-            if current_token_type == '-':
+            if current_token == '-':
                 tk.advance()
                 self.write_term()
                 self.__write_arithmetic("neg")
-            else:  # current_token_type == '~'
+            else:  # current_token == '~'
                 tk.advance()
                 self.write_term()
                 self.__write_arithmetic("not")
-            tk.advance()
+            # tk.advance()
             return
 
         #  method(exp1, exp2, ..., expn) or Class.func(exp1,...,expn)
         elif current_token_type == IDENTIFIER:
             if VM_COMMENTS:
                 self.__write_comment("Writing function, " + str(tk.get_next_token()))
+            tk.advance()
             self.__compile_subroutine_call(current_token)
 
     def write_expression(self):
@@ -678,7 +681,7 @@ class SyntaxAnalyzer:
         """
         Write a label to the vm file
         """
-        self.__vm_file.write("label" + label_name + NEW_LINE)
+        self.__vm_file.write("label " + label_name + NEW_LINE)
 
     def __write_return(self):
         """
@@ -690,10 +693,10 @@ class SyntaxAnalyzer:
         """
         Write go_to command to the vm file
         """
-        self.__vm_file.write("goto" + label_name + NEW_LINE)
+        self.__vm_file.write("goto " + label_name + NEW_LINE)
 
     def __write_if_goto(self, label_name):
         """
         Write if-goto command to the vm file
         """
-        self.__vm_file.write("if-goto" + label_name + NEW_LINE)
+        self.__vm_file.write("if-goto " + label_name + NEW_LINE)
