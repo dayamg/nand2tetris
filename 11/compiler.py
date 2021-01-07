@@ -119,8 +119,7 @@ if __name__ == "__main__":
 
     # Check if a file or a directory of vm files.
     if os.path.isfile(jack_path_input):
-        # TO BE DELETED - added "OUR" to our VM code
-        vm_file_path = jack_path_input.replace(JACK_SUFFIX, "OUR" + VM_SUFFIX)
+        vm_file_path = jack_path_input.replace(JACK_SUFFIX, VM_SUFFIX)
         SyntaxAnalyzer(jack_path_input, vm_file_path)
 
     if os.path.isdir(jack_path_input):
