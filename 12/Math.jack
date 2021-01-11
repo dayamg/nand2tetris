@@ -34,9 +34,10 @@ class Math {
 
     /** Returns the absolute value of x. */
     function int abs(int x) {
-        // For efficiency, we don't use if, rather switching the MSB to 0.
-        // We do that by taking the 15th bit of x (sign bit) and reducing it from x.
-        return x - (twoToThe[15] & x);
+        if (x < 0) {
+            return -x;
+        }
+        return x;
     }
 
     /** Returns the product of x and y. */
@@ -62,7 +63,7 @@ class Math {
     */
     function int dividePositive(int x, int y) {
         var int q;
-        if ((x < y) | (y < 0)) {
+        if ((y < 0) | (x < y)) {
             let recursiveStepQ = 0;
             return 0;
         }
@@ -83,7 +84,6 @@ class Math {
 
         // The sign is the XOR of x's and y's MSB (except when x = 0 or y = 0, but that is irrelevant here):
         let sign = (sgnX | sgnY) & (~(sgnX & sgnY));
-
         let div = Math.dividePositive(Math.abs(x), Math.abs(y));
         if (sign = 0) {
             return div;
@@ -94,18 +94,19 @@ class Math {
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-        var int y, j, guess;
+        var int y, j, guess, squared;
         let y = 0;
         let j = 7;  // n/2 - 1 = 7 as n = 16
 
         while (0 < (j + 1)) { // while j >= 0
-            let guess = (y + twoToThe[j]) * (y + twoToThe[j]);
-            if ((guess < (x + 1)) & (0 < guess)) { // if (y+2^j)^2 <= x
-                let y = y + twoToThe[j];
+            let guess = y + twoToThe[j];
+            let squared = guess * guess;
+            if ((0 < squared) & (~(x < squared))) { // if (y+2^j)^2 <= x
+                let y = guess;
             }
             let j = j - 1;
         }
-	    return y;
+        return y;
 	}
 
     /** Returns the greater number. */

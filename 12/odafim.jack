@@ -50,3 +50,46 @@
         }
 	    return y;
 	}
+
+	        while (0 < (j + 1)) { // while j >= 0
+            let guess = y + twoToThe[j];
+            let squared = guess * guess;
+            if ((0 < squared) & (squared < (x + 1))) { // if (y+2^j)^2 <= x
+                let y = guess;
+            }
+            let j = j - 1;
+        }
+	    return y;
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+        var int y, j, guess, squared;
+        let y = 0;
+        let j = 7;  // n/2 - 1 = 7 as n = 16
+
+        while (0 < (j + 1)) { // while j >= 0
+            let guess = y + twoToThe[j];
+            let squared = guess * guess;
+            if ((0 < squared) & (squared < (x + 1))) { // if (y+2^j)^2 <= x
+                let y = guess;
+            }
+            let j = j - 1;
+        }
+
+
+        while (0 < (j + 1)) { // while j >= 0
+
+            let guess = (y + twoToThe[j]) * (y + twoToThe[j]);
+            do Output.printString("  j: ");
+            do Output.printInt(j);
+            do Output.printString("  y: ");
+            do Output.printInt(y);
+            do Output.printString("  guess: ");
+            do Output.printInt(guess);
+            do Output.println();
+            if ((guess < (x + 1)) & (0 < guess)) { // if (y+2^j)^2 <= x
+                let y = y + twoToThe[j];
+            }
+            let j = j - 1;
+        }
+	    return y;
