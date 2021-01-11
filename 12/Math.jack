@@ -1,54 +1,126 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/12/Math.jack
-
 /**
  * A library of commonly used mathematical functions.
- * Note: Jack compilers implement multiplication and division using OS method calls.
  */
 class Math {
-
+    static Array twoToThe;
+    static int recursiveStepQ;
     /** Initializes the library. */
     function void init() {
-		
+        /// Ran out of power? Try powers of two.
+        let twoToThe = Array.new(16);
+        let twoToThe[0] = 1;
+        let twoToThe[1] = 2;
+        let twoToThe[2] = 4;
+        let twoToThe[3] = 8;
+        let twoToThe[4] = 16;
+        let twoToThe[5] = 32;
+        let twoToThe[6] = 64;
+        let twoToThe[7] = 128;
+        let twoToThe[8] = 256;
+        let twoToThe[9] = 512;
+        let twoToThe[10] = 1024;
+        let twoToThe[11] = 2048;
+        let twoToThe[12] = 4096;
+        let twoToThe[13] = 8192;
+        let twoToThe[14] = 16384;
+        let twoToThe[15] = 16384 + 16384;  /// 32768 = 2^15 is too big
+        return;
+    }
+
+    /** Calculates the ith bit of x. Sort of. */
+    function boolean bit(int x, int i) {
+        return twoToThe[i] & x;
     }
 
     /** Returns the absolute value of x. */
     function int abs(int x) {
-		
+        // For efficiency, we don't use if, rather switching the MSB to 0.
+        // We do that by taking the 15th bit of x (sign bit) and reducing it from x.
+        return x - (twoToThe[15] & x);
     }
 
-    /** Returns the product of x and y. 
-     *  When a Jack compiler detects the multiplication operator '*' in the 
-     *  program's code, it handles it by invoking this method. In other words,
-     *  the Jack expressions x*y and multiply(x,y) return the same value.
-     */
+    /** Returns the product of x and y. */
     function int multiply(int x, int y) {
-	
+        var int sum, shiftedX, i;
+        let sum = 0;
+        let shiftedX = x;
+        let i = 0;
+        /// In our case, w = 16, since this is a 16-bit computer
+        while (i < 16) {
+            if (~(Math.bit(y, i) = 0)) {
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let i = i + 1;
+        }
+	    return sum;
     }
 
-    /** Returns the integer part of x/y.
-     *  When a Jack compiler detects the multiplication operator '/' in the 
-     *  program's code, it handles it by invoking this method. In other words,
-     *  the Jack expressions x/y and divide(x,y) return the same value.
-     */
+   /** A helper function for calculating the division of two positive integers.
+    * As we are not allowed to use multiplication, we calculate 2 * q * y using recursiveStepQ.
+    * We use it as a static variable, as we do not want to return a tuple.
+    */
+    function int dividePositive(int x, int y) {
+        var int q;
+        if ((x < y) | (y < 0)) {
+            let recursiveStepQ = 0;
+            return 0;
+        }
+        let q = Math.dividePositive(x, y + y);
+        if (x - recursiveStepQ < y) {
+            return q + q;
+        }
+        let recursiveStepQ = y + recursiveStepQ; // calculating 2 * q * y recursively
+	    return q + q + 1;
+    }
+
+    /** Returns the integer part of x/y. */
     function int divide(int x, int y) {
-	
+
+        var int sign, sgnX, sgnY, div;
+        let sgnX = Math.bit(x, 15);
+        let sgnY = Math.bit(y, 15);
+
+        // The sign is the XOR of x's and y's MSB (except when x = 0 or y = 0, but that is irrelevant here):
+        let sign = (sgnX | sgnY) & (~(sgnX & sgnY));
+
+        let div = Math.dividePositive(Math.abs(x), Math.abs(y));
+        if (sign = 0) {
+            return div;
+        }
+
+        return -div;
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-	
-    }
+        var int y, j, guess;
+        let y = 0;
+        let j = 7;  // n/2 - 1 = 7 as n = 16
+
+        while (0 < (j + 1)) { // while j >= 0
+            let guess = (y + twoToThe[j]) * (y + twoToThe[j]);
+            if ((guess < (x + 1)) & (0 < guess)) { // if (y+2^j)^2 <= x
+                let y = y + twoToThe[j];
+            }
+            let j = j - 1;
+        }
+	    return y;
+	}
 
     /** Returns the greater number. */
     function int max(int a, int b) {
-	
+        if (a < b) {
+            return b;
+        }
+	    return a;
     }
 
     /** Returns the smaller number. */
     function int min(int a, int b) {
-	
-    }
+        if (b < a) {
+            return b;
+        }
+	    return a;
+	}
 }

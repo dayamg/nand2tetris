@@ -1,0 +1,52 @@
+
+    /** Returns the product of x and y. */
+    function int multiply(int x, int y) {
+        var int sum, shiftedX, i;
+        let sum = 0;
+        let shiftedX = x;
+        let i = 0;
+        /// In our case, w = 16, since this is a 16-bit computer
+        while (i < 16) {
+            if (~(Math.bit(y, i) = 0)) {
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let i = i + 1;
+        }
+	    return sum;
+    }
+
+   /** A helper function for calculating the division of two positive integers. */
+    function int dividePositive(int x, int y) {
+        var int q;
+        if ((y > x) | (y < 0)) {
+            return 0;
+        }
+        let q = Math.dividePositive(x, y + y);
+        if (x - (2 * q * y) < y) {
+            return (q + q);
+        }
+	    return (2 * q) + 1;
+    }
+
+    /** Returns the integer part of x/y. */
+    function int divide(int x, int y) {
+        // The sign is the multiplication of x's and y's MSB:
+        return (Math.bit(x, 15) * Math.bit(y, 15)) * Math.dividePositive(Math.abs(x), Math.abs(y));
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+        var int y, j, guess;
+        let y = 0;
+        let j = 7;  // n/2 - 1 = 7 as n = 16
+
+        while (0 < (j + 1)) { // while j >= 0
+            let guess = (y + twoToThe[j]) * (y + twoToThe[j])
+            if ((guess < (x + 1)) & (0 < guess)) { // if (y+2^j)^2 <= x
+                let y = y + twoToThe[j];
+            }
+            let j = j - 1;
+        }
+	    return y;
+	}

@@ -13,6 +13,12 @@ class Main {
         do Output.printString("Wait test:");
         do Output.println();
         do Output.printString("Press any key. After 2 seconds, another message will be printed:");
+        do Output.println();
+        do Output.printInt(16384 + 16384);
+        do Output.println();
+        do Output.printInt(2 * 16384);
+
+
 
         while (key = 0) {
 	        let key = Keyboard.keyPressed();
