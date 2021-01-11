@@ -226,4 +226,3 @@ class JackTokenizer:
     def advance(self):
         self.__token_index += 1
         self.get_next_token()
-

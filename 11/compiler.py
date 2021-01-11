@@ -130,4 +130,3 @@ if __name__ == "__main__":
 
                 vm_file_path = filename_jack_path.replace(JACK_SUFFIX, VM_SUFFIX)
                 SyntaxAnalyzer(filename_jack_path, vm_file_path)
-
