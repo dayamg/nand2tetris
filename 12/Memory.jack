@@ -10,25 +10,59 @@
  */ 
 class Memory {
 
+    static Array ram, heap, freeList, lastList; // freeList: pointer to the first free list.
+
     /** Initializes the class. */
     function void init() {
+        let ram = 0;
+        let heap = 2048; // heap base
+        let heap[0] = null; // when the pointer is null, we know that it's the last list.
+        let heap[1] = 14334; // size of heap, stored in the second cell
+        let freeList = heap; // pointer to the head of the first free list
+        let lastList = heap;
+        return;
     }
 
     /** Returns the RAM value at the given address. */
     function int peek(int address) {
+        return ram[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
     }
+
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
+        var Array currListPointer, allocBaseAddress;
+        let currListPointer = freeList;
+        while ((size > currListPointer[1] + 2) & (~(currListPointer[0] = null))) {
+            let currListPointer = currListPointer[0];  // pointer to the next list
+        }
+
+        /// If we exited the loop since we reached the end mission is still impossible, return null
+        if ((size > currListPointer[1] + 2) & (currListPointer[0] = null)) {
+            return null;  // No block found. Should not happen to often.
+        }
+
+        /// Else, we found a possible list. carve a block of size _size_ from it, and return its base address
+        let allocBaseAddress = currListPointer + currListPointer[1] + 2 - size;  // pointer for block of given size
+        let allocBaseAddress[0] = null;  // Set "next" pointer to null.
+        let currListPointer[1] = currListPointer - size;
+        let allocBaseAddress[1] = size;
+        return allocBaseAddress + 2;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
-    function void deAlloc(Array o) {
+    function void deAlloc(Array block) {
+        /// append the array block in the end of freeList
+        let lastList[0] = block - 2; // connect the last list to the block
+        let lastList = block - 2;  // update the lastList pointer to point at the base address of block
+        return;
     }    
 }
