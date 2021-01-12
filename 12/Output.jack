@@ -17,10 +17,20 @@
 class Output {
 
     // Character map for displaying characters
-    static Array charMaps; 
+    static Array charMaps;
+    static int cursor_row, cursor_column, mask_lsb, mask_msb;
+    static Array screen;
+
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
+        let screen = 16384;
+        let cursor_row = 0;
+        let cursor_column = 0;
+        let mask_lsb = 255;
+        let mask_msb = ~255;
+        do Output.initMap();
+        return;
     }
 
     // Initializes the character map array
@@ -32,7 +42,7 @@ class Output {
         // Black square, used for displaying non-printable characters.
         do Output.create(0,63,63,63,63,63,63,63,63,63,0,0);
 
-        // Assigns the bitmap for each character in the charachter set.
+        // Assigns the bitmap for each character in the character set.
         // The first parameter is the character index, the next 11 numbers
         // are the values of each row in the frame that represents this character.
         do Output.create(32,0,0,0,0,0,0,0,0,0,0,0);          //
@@ -71,7 +81,7 @@ class Output {
         do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
         do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-        do Output.create(65,0,0,0,0,0,0,0,0,0,0,0);          // A ** TO BE FILLED **
+        do Output.create(65,12,30,51,51,63,51,51,51,51,0,0); // A ** TO BE FILLED **
         do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
         do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
         do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -176,28 +186,132 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
+        let cursor_row = i;
+        let cursor_column = j;
+        do Output.onlyPrintChar(32); // erase the char in new place
+        return;
+    }
+
+    /** Displays the given character at the cursor location. */
+    function void onlyPrintChar(char c) {
+        var Array char_bitmap;
+        var int i, screen_address, bitmap_row;
+
+        let char_bitmap = Output.getMap(c);
+        let screen_address = ((cursor_row*11)*32)+((cursor_column*8)/16);
+
+        // go over 12 rows of char bitmap and draw them.
+        let i = 0;
+        while ( i < 11){
+            let bitmap_row = char_bitmap[i];
+            // check if pixel in msb side of screen word (16 bits).
+            if (cursor_column & 1){
+                // advance pixel to msb side.
+                let bitmap_row = bitmap_row * 256;
+                // clean bitmap part in word.
+                let screen[screen_address] = screen[screen_address] & ~mask_msb;
+                // write bitmap to screen without changing the other half.
+                let screen[screen_address] = (bitmap_row & mask_msb) | screen[screen_address];
+            } else {
+                // clean bitmap part in word.
+                let screen[screen_address] = screen[screen_address] & ~mask_lsb;
+                // write bitmap to screen without changing the other half.
+                let screen[screen_address] = (bitmap_row & mask_lsb) | screen[screen_address];
+            }
+            // move to next line
+            let screen_address = screen_address + 32;
+			let i = i + 1;
+        }
+        return;
     }
 
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
+        if (c = String.newLine()) {
+            do Output.println();
+            return;
+        } else {
+            if (c = String.backSpace()) {
+                do Output.backSpace();
+                return;
+            }
+        }
+
+        do Output.onlyPrintChar(c);
+        do Output.advanceCursor();
+        return;
+    }
+
+    /** advance cursor by 1 */
+    function void advanceCursor(){
+        if (cursor_column < 63){
+            let cursor_column = cursor_column + 1;
+        } else {
+            let cursor_column = 0;
+            if (cursor_row < 22){
+                let cursor_row = cursor_row + 1;
+            } else {
+                let cursor_row = 0;
+            }
+        }
+        return;
     }
 
     /** displays the given string starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printString(String s) {
+        var int i, c;
+        let i = 0;
+        while (i < s.length()){
+            let c = s.charAt(i);
+            do Output.printChar(c);
+            let i = i + 1;
+        }
+        return;
     }
 
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
+        var String str;
+        let str = String.new(10);
+        do str.setInt(i);
+        do Output.printString(str);
+        do str.dispose();
+        return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
+        do Output.onlyPrintChar(32); // erase the char in the last place (cursor maybe)
+        let cursor_column = 0;
+        if (cursor_row < 22){
+            let cursor_row = cursor_row + 1;
+        } else {
+           let cursor_row = 0;
+        }
+        return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
+        do Output.onlyPrintChar(32); // erase the char in the last place (cursor maybe)
+        if (cursor_column > 0){
+            let cursor_column = cursor_column - 1;
+        } else {
+            if (cursor_row > 0) {
+                let cursor_row = cursor_row - 1;
+                let cursor_column = 63;
+            }
+        }
+        do Output.onlyPrintChar(32); // erase the char in new place
+        return;
+    }
+
+    /** Display a black square in cursor position. */
+    function void displayCursor(){
+        do Output.onlyPrintChar(0);
+        return;
     }
 }
