@@ -11,30 +11,78 @@
  */
 class Screen {
 
+    static boolean currentColor;
+    static Array screen;
+
     /** Initializes the Screen. */
     function void init() {
+        let currentColor = true;  // set as black pixel
+        let screen = 16384;
+        return;
     }
 
     /** Erases the entire screen. */
     function void clearScreen() {
+        var int cellCounter;
+        let cellCounter = 0;
+        while (cellCounter < 8192)) {
+            let screen[cellCounter] = false;
+            let cellCounter = cellCounter + 1;
+        }
+        return;
     }
 
     /** Sets the current color, to be used for all subsequent drawXXX commands.
      *  Black is represented by true, white by false. */
     function void setColor(boolean b) {
+        let currentColor = b;
+        return;
     }
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
+        var int address, value, mask;
+        let address = Math.multiplyByPowerOfTwo(y, 5) + Math.divide(x, 16); // 32 * y + x / 16
+        let value = screen[address];
+        let mask = Math.twoToThe[x & 15]  // mask is the (x % 16)th bit of x
+
+        if (currentColor) {
+            let screen[address] = mask | screen[address]; // if current color is black, apply "or"
+        }
+        else {
+            let screen[address] = (~mask) & screen[address];  // if current color is black, apply "and"
+        }
+
+        return;
     }
+
+    /** Draws a horizontal line, where x1 is the left end, and x2 is the second end. A line has two ends, but life has
+     *   only one. */
+    function void drawHorizontalLine(int x1, int x2, int y) {
+
+
+        return;
+    }
+
 
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
+
+
+        return;
     }
 
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+        var int lineCounter;
+        let lineCounter = y2;
+        while (~(lineCounter > y1)) {
+            do Screen.drawLine(x1, x2, lineCounter);
+            let lineCounter = lineCounter + 1;
+        }
+        return;
+
     }
 
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
