@@ -25,7 +25,7 @@ class Main {
         do Output.moveCursor(2, 0);
         do Output.printString("0123456789");
         do Output.println();
-        
+
         do Output.printString("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz");
         do Output.println();
         
@@ -36,6 +36,7 @@ class Main {
         do Output.printInt(-12345);
         do Output.backSpace();
         do Output.printInt(6789);
+        do Output.println();
         
         return;
     }
