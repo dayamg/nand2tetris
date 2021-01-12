@@ -10,8 +10,8 @@
  */ 
 class Memory {
 
-    static Array ram, heap;
-    static int freeList, lastList; // freeList: pointer to the first free list.
+    static Array ram, heap, lastList;
+    static int freeList; // freeList: pointer to the first free list.
 
     /** Initializes the class. */
     function void init() {
@@ -20,7 +20,7 @@ class Memory {
         let heap[0] = null; // when the pointer is null, we know that it's the last list.
         let heap[1] = 14334; // size of heap, stored in the second cell
         let freeList = 0; // index of the head of the first free list
-        let lastList = 0;
+        let lastList = heap;
 
         return;
     }
@@ -53,9 +53,9 @@ class Memory {
         }
 
         /// Else, we found a possible list. carve a block of size _size_ from it, and return its base address
-        let allocBaseAddress = currListPointer + heap[currListPointer + 1] + 2 - size;
+        let allocBaseAddress = currListPointer + heap[currListPointer + 1] - size;
         let heap[allocBaseAddress] = null;  // Set "next" pointer to null.
-        let heap[currListPointer + 1] = heap[currListPointer + 1] - size;
+        let heap[currListPointer + 1] = (heap[currListPointer + 1] - 2) - size;
         let heap[allocBaseAddress + 1] = size;
         return heap + allocBaseAddress + 2;
     }
@@ -64,7 +64,7 @@ class Memory {
      *  it available for future allocations. */
     function void deAlloc(Array block) {
         /// append the array block in the end of freeList
-        let heap[lastList] = block - 2; // connect the last list to the block
+        let lastList[0] = block - 2; // connect the last list to the block
         let lastList = block - 2;  // update the lastList pointer to point at the base address of block
         return;
     }    
