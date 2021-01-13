@@ -1,8 +1,3 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/12/Screen.jack
-
 /**
  * A library of functions for displaying graphics on the screen.
  * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
@@ -26,7 +21,7 @@ class Screen {
         var int cellCounter;
         let cellCounter = 0;
         while (cellCounter < 8192)) {
-            let screen[cellCounter] = false;
+            let screen[cellCounter] = false;  // make it white
             let cellCounter = cellCounter + 1;
         }
         return;
@@ -57,16 +52,82 @@ class Screen {
     }
 
     /** Draws a horizontal line, where x1 is the left end, and x2 is the second end. A line has two ends, but life has
-     *   only one. */
+     *   only one. We assume x1 <= x2. */
     function void drawHorizontalLine(int x1, int x2, int y) {
+        var int addressX1, addressX2, addressCounter, x1Mod16, x2Mod16;
+        let addressX1 =  Math.multiplyByPowerOfTwo(y, 5) + Math.divide(x1, 16);
+        let addressX2 =  Math.multiplyByPowerOfTwo(y, 5) + Math.divide(x2, 16);
+        if (addressX1 = addressX2) {
+            do Screen.drawHorizontalLineSameAddress(x1, x2, y);
+            return;
+        }
+
+        let x1Mod16 = x1 & 15;
+        let x1Mod16 = x2 & 15;
+
+        /// Draw the line inside the address addressX1. Last pixel in addressX1 is (x1 + 16 - x1Mod16, y)
+        do Screen.drawHorizontalLineSameAddress(x1, x1 + 16 - x1Mod16, y);
+
+        let addressCounter = addressX1 + 1;
+        while (addressCounter < addressX2) { /// color black or white entirely all pixels in between
+            let screen[addressCounter] = currentColor;
+            let addressCounter = addressCounter + 1;
+        }
+
+        /// Draw the end of the line, inside of the address of x2. The first pixel in addressX2 is (x2 - x2Mod16, y)
+        do Screen.drawHorizontalLineSameAddress(x2 - x2Mod16, x2, y);
+
+        return;
+    }
+
+     /** Draws a horizontal line in one address, i.e., a short line in which both ends fall into the same address.
+      *  We assume x1 <= x2. */
+    function void drawHorizontalLineSameAddress(int x1, int x2, int y) {
+        var int xCounter;
+        let xCounter = x1;
+        while (~(x > x2)) {
+            do Screen.drawPixel(x, y);
+        }
+        return;
+    }
+
+    /** Draws a vertical line, assuming y1 < y2.   */
+    function void drawVerticalLine(int x, int y1, int y2) {
+        var int yCounter;
+        let yCounter = y1;
+        while (~(y1 > y2)) {
+            do Screen.drawPixel(x, yCounter);
+        }
+        return;
+    }
+
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        var int address1, address2;
+
+        if (x1 = x2) {
+            do Screen.drawVerticalLine(x1, Math.min(y1, y2), Math.max(y1, y2));
+            return;
+        }
+
+        if (y1 = y2) {
+            do Screen.drawHorizontalLine(Math.min(x1, x2), Math.max(x1, x2), y1);
+            return;
+        }
+
+
+
+
+        let address1 =  Math.multiplyByPowerOfTwo(y1, 5) + Math.divide(x1, 16);
+        let address2 =  Math.multiplyByPowerOfTwo(y2, 5) + Math.divide(x2, 16);
+
 
 
         return;
     }
 
-
-    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
-    function void drawLine(int x1, int y1, int x2, int y2) {
+    /** Draws a diagonal line from pixel (x1,y1) to pixel (x2,y2), when x1 <= x2, and y1 <= y2. */
+    function void drawDiagonalLine(int x1, int y1, int x2, int y2) {
 
 
         return;
