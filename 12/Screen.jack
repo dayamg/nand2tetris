@@ -103,8 +103,6 @@ class Screen {
 
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
-        var int address1, address2;
-
         if (x1 = x2) {
             do Screen.drawVerticalLine(x1, Math.min(y1, y2), Math.max(y1, y2));
             return;
@@ -115,21 +113,74 @@ class Screen {
             return;
         }
 
+        if ((x1 < x2) & (y1 < y2)) {
+            do Screen.drawNorthEastLine(x1, y1, x2 - x1, y2 - y1);
+            return;
+        }
 
+        if ((x2 < x1) & (y2 < y1)) {
+            do Screen.drawNorthEastLine(x2, y2, x1 - x2, y1 - y2);
+            return;
+        }
 
+        if ((x2 < x1) & (y1 < y2)) {
+            do Screen.drawSouthEastLine(x2, y2, x1 - x2, y1 - y2);
+            return;
+        }
 
-        let address1 =  Math.multiplyByPowerOfTwo(y1, 5) + Math.divide(x1, 16);
-        let address2 =  Math.multiplyByPowerOfTwo(y2, 5) + Math.divide(x2, 16);
-
-
+        else { /// x1 < x2 and y2 < y1
+            do Screen.drawSouthEastLine(x1, y1, x2 - x1, y2 - y1);
+            return;
+        }
 
         return;
     }
 
-    /** Draws a diagonal line from pixel (x1,y1) to pixel (x2,y2), when x1 <= x2, and y1 <= y2. */
-    function void drawDiagonalLine(int x1, int y1, int x2, int y2) {
+    /** Draws a diagonal line from pixel (x,y) to pixel (x+dx,y+dy), assuming dx, dy > 0. */
+    function void drawNorthEastLine(int x, int y, int dx, int dy) {
+        var int a, b, AdyMinusBdx;
+        let AdyMinusBdx = 0;
+        let a = 0;
+        let b = 0;
+        do Screen.drawPixel(x, y);
 
+        while ((~(a > dx)) & (~(b > dy))) {
+            do Screen.drawPixel(x + a, y + b);
 
+            /// Update to see if we are above or below the theoretical line
+            if (AdyMinusBdx < 0) {
+                let a = a + 1;
+                let AdyMinusBdx = AdyMinusBdx + dy;
+            }
+            else {
+                let b = b + 1;
+                let AdyMinusBdx = AdyMinusBdx - dx;
+            }
+        }
+        return;
+    }
+
+    /** Draws a diagonal line from pixel (x,y) to pixel (x+dx,y+dy), assuming dx > 0, dy < 0. */
+    function void drawSouthEastLine(int x, int y, int dx, int dy) {
+        var int a, b, AdyMinusBdx;
+        let AdyMinusBdx = 0;
+        let a = 0;
+        let b = 0;
+        do Screen.drawPixel(x, y);
+
+        while ((~(a > dx)) & (~(b > dy))) {
+            do Screen.drawPixel(x + a, y + b);
+
+            /// Update to see if we are above or below the theoretical line.
+            if (AdyMinusBdx < 0) { // Here is the difference - we switch b to -b and dy to -dy
+                let a = a + 1;
+                let AdyMinusBdx = AdyMinusBdx - dy;
+            }
+            else {
+                let b = b - 1;
+                let AdyMinusBdx = AdyMinusBdx - dx;
+            }
+        }
         return;
     }
 
@@ -139,7 +190,7 @@ class Screen {
         var int lineCounter;
         let lineCounter = y2;
         while (~(lineCounter > y1)) {
-            do Screen.drawLine(x1, x2, lineCounter);
+            do Screen.drawHorizontalLine(x1, x2, lineCounter);
             let lineCounter = lineCounter + 1;
         }
         return;
@@ -148,5 +199,13 @@ class Screen {
 
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
+        var int dy, sinusTimesR;
+        let dy = -r;
+        while (~(dy > r)) {
+            let sinusTimesR = Math.sqrt((r * r) - (dy * dy));
+            do Screen.drawHorizontalLine(x - sinusTimesR, x + sinusTimesR, y + dy);
+            let dy = dy + 1;
+        }
+        return;
     }
 }
