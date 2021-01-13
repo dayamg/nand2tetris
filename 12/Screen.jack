@@ -20,7 +20,7 @@ class Screen {
     function void clearScreen() {
         var int cellCounter;
         let cellCounter = 0;
-        while (cellCounter < 8192)) {
+        while (cellCounter < 8192) {
             let screen[cellCounter] = false;  // make it white
             let cellCounter = cellCounter + 1;
         }
@@ -39,15 +39,14 @@ class Screen {
         var int address, value, mask;
         let address = Math.multiplyByPowerOfTwo(y, 5) + Math.divide(x, 16); // 32 * y + x / 16
         let value = screen[address];
-        let mask = Math.twoToThe[x & 15]  // mask is the (x % 16)th bit of x
+        let mask = Math.powerOfTwo(x & 15);  // mask is the (x % 16)th bit of x
 
         if (currentColor) {
             let screen[address] = mask | screen[address]; // if current color is black, apply "or"
-        }
-        else {
-            let screen[address] = (~mask) & screen[address];  // if current color is black, apply "and"
+            return;
         }
 
+        let screen[address] = (~mask) & screen[address];  // if current color is black, apply "and"
         return;
     }
 
@@ -57,16 +56,15 @@ class Screen {
         var int addressX1, addressX2, addressCounter, x1Mod16, x2Mod16;
         let addressX1 =  Math.multiplyByPowerOfTwo(y, 5) + Math.divide(x1, 16);
         let addressX2 =  Math.multiplyByPowerOfTwo(y, 5) + Math.divide(x2, 16);
+        let x1Mod16 = x1 & 15;
+        let x2Mod16 = x2 & 15;
         if (addressX1 = addressX2) {
-            do Screen.drawHorizontalLineSameAddress(x1, x2, y);
+            do Screen.drawHorizontalShort(addressX1, x1Mod16, x2Mod16);
             return;
         }
 
-        let x1Mod16 = x1 & 15;
-        let x1Mod16 = x2 & 15;
-
-        /// Draw the line inside the address addressX1. Last pixel in addressX1 is (x1 + 16 - x1Mod16, y)
-        do Screen.drawHorizontalLineSameAddress(x1, x1 + 16 - x1Mod16, y);
+        /// Draw the line inside the address addressX1. Last pixel in addressX1 is 15
+        do Screen.drawHorizontalShort(addressX1, x1Mod16, 15);
 
         let addressCounter = addressX1 + 1;
         while (addressCounter < addressX2) { /// color black or white entirely all pixels in between
@@ -74,29 +72,38 @@ class Screen {
             let addressCounter = addressCounter + 1;
         }
 
-        /// Draw the end of the line, inside of the address of x2. The first pixel in addressX2 is (x2 - x2Mod16, y)
-        do Screen.drawHorizontalLineSameAddress(x2 - x2Mod16, x2, y);
+        /// Draw the end of the line, inside of the address of x2. The first pixel in addressX2 is 0
+        do Screen.drawHorizontalShort(addressX2, 0, x2Mod16);
 
         return;
     }
 
      /** Draws a horizontal line in one address, i.e., a short line in which both ends fall into the same address.
-      *  We assume x1 <= x2. */
-    function void drawHorizontalLineSameAddress(int x1, int x2, int y) {
-        var int xCounter;
-        let xCounter = x1;
-        while (~(x > x2)) {
-            do Screen.drawPixel(x, y);
+      *  We assume x1Mod16 <= x2Mod16, where both are numbers between 0 and 15. */
+    function void drawHorizontalShort(int address, int x1Mod16, int x2Mod16) {
+        var int mask, xCounter;
+
+        let xCounter = x1Mod16;
+        while (~(xCounter > x2Mod16)) { /// Same as draw pixel, but as we already know the address, we shorten it
+            let mask = Math.powerOfTwo(xCounter & 15);
+            if (currentColor) {
+                let screen[address] = mask | screen[address];
+            }
+            else {
+                let screen[address] = (~mask) & screen[address];
+            }
+            let xCounter = xCounter + 1;
         }
         return;
     }
 
-    /** Draws a vertical line, assuming y1 < y2.   */
+    /** Draws a vertical line, assuming y1 <= y2.   */
     function void drawVerticalLine(int x, int y1, int y2) {
         var int yCounter;
         let yCounter = y1;
-        while (~(y1 > y2)) {
+        while (~(yCounter > y2)) {
             do Screen.drawPixel(x, yCounter);
+            let yCounter = yCounter + 1;
         }
         return;
     }
@@ -132,8 +139,6 @@ class Screen {
             do Screen.drawSouthEastLine(x1, y1, x2 - x1, y2 - y1);
             return;
         }
-
-        return;
     }
 
     /** Draws a diagonal line from pixel (x,y) to pixel (x+dx,y+dy), assuming dx, dy > 0. */
@@ -168,7 +173,7 @@ class Screen {
         let b = 0;
         do Screen.drawPixel(x, y);
 
-        while ((~(a > dx)) & (~(b > dy))) {
+        while ((~(a > dx)) & (~(b < dy))) {
             do Screen.drawPixel(x + a, y + b);
 
             /// Update to see if we are above or below the theoretical line.
@@ -188,8 +193,9 @@ class Screen {
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
         var int lineCounter;
-        let lineCounter = y2;
-        while (~(lineCounter > y1)) {
+
+        let lineCounter = y1;
+        while (~(lineCounter > y2)) {
             do Screen.drawHorizontalLine(x1, x2, lineCounter);
             let lineCounter = lineCounter + 1;
         }

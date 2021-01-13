@@ -8,29 +8,57 @@ class Main {
 
     /** Draws a sample pictue on the screen using lines and circles. */
     function void main() {
-    
-        do Screen.drawLine(0,220,511,220);        // base line
-        do Screen.drawRectangle(280,90,410,220);  // house
-        
-        do Screen.setColor(false); 
-        do Screen.drawRectangle(350,120,390,219); // door
-        do Screen.drawRectangle(292,120,332,150); // window
-        
-        do Screen.setColor(true); 
-        do Screen.drawCircle(360,170,3);          // door handle
-        do Screen.drawLine(280,90,345,35);        // roof
-        do Screen.drawLine(345,35,410,90);        // roof
+//
+//        do Screen.drawLine(0,220,511,220);        // base line
+//        do Screen.drawRectangle(280,90,410,220);  // house
+//
+//        do Screen.setColor(false);
+//        do Screen.drawRectangle(350,120,390,219); // door
+//        do Screen.drawRectangle(292,120,332,150); // window
+//
+//        do Screen.setColor(true);
+//        do Screen.drawCircle(360,170,3);          // door handle
+//        do Screen.drawLine(280,90,345,35);        // roof
+//        do Screen.drawLine(345,35,410,90);        // roof
+//
+//        do Screen.drawCircle(140,60,30);          // sun
+//        do Screen.drawLine(140,26, 140, 6);
+//        do Screen.drawLine(163,35,178,20);
+//        do Screen.drawLine(174,60,194,60);
+//        do Screen.drawLine(163,85,178,100);
+//        do Screen.drawLine(140,94,140,114);
+//        do Screen.drawLine(117,85,102,100);
+//        do Screen.drawLine(106,60,86,60);
+//        do Screen.drawLine(117,35,102,20);
 
-        do Screen.drawCircle(140,60,30);          // sun
-        do Screen.drawLine(140,26, 140, 6);       
-        do Screen.drawLine(163,35,178,20);       
-        do Screen.drawLine(174,60,194,60);       
-        do Screen.drawLine(163,85,178,100);       
-        do Screen.drawLine(140,94,140,114);       
-        do Screen.drawLine(117,85,102,100);       
-        do Screen.drawLine(106,60,86,60);       
-        do Screen.drawLine(117,35,102,20);       
-        
+        do Screen.clearScreen();
+
+        do Screen.drawCircle(256,128,50);
+        do Screen.setColor(false);
+        do Screen.drawCircle(256,128,40);
+        do Screen.setColor(true);
+        do Screen.drawCircle(256,128,30);
+        do Screen.setColor(false);
+        do Screen.drawCircle(256,128,20);
+        do Screen.setColor(true);
+        do Screen.drawCircle(256,128,10);
+        do Screen.setColor(false);
+        do Screen.drawCircle(256,128,0);
+        do Screen.setColor(true);
+
+        do Screen.drawLine(256, 128, 170, 67);
+        do Screen.drawLine(175, 92, 196, 80);
+        do Screen.drawLine(165, 92, 186, 80);
+        do Screen.drawLine(155, 92, 176, 80);
+        do Screen.drawLine(145, 92, 166, 80);
+
+        do Screen.drawLine(190, 78, 196, 80);
+        do Screen.drawLine(180, 78, 186, 80);
+        do Screen.drawLine(170, 78, 176, 80);
+        do Screen.drawLine(160, 78, 166, 80);
+
+
+
         return;
     }
 }
