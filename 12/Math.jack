@@ -40,14 +40,19 @@ class Math {
         return x;
     }
 
-    /** A more efficient algorithm for calculating multiplies by powers of two. */
+    /** A more efficient algorithm for calculating multiplies by powers of two. For Screen.jack.  */
     function int multiplyByPowerOfTwo(int x, int powerOfTwo) {
         var int recursiveStepSum;
         if (powerOfTwo = 0) {
             return x;
         }
-        let recursiveStepSum = multiplyByPowerOfTwo(x, powerOfTwo - 1);
+        let recursiveStepSum = Math.multiplyByPowerOfTwo(x, powerOfTwo - 1);
         return recursiveStepSum + recursiveStepSum;
+    }
+
+    /** Returns twoToThe[i]. Fot external use in Screen.jack.  */
+    function int powerOfTwo(int i) {
+        return twoToThe[i];
     }
 
     /** Returns the product of x and y. */
