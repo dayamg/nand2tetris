@@ -32,7 +32,7 @@ class Sys {
         var int yours;
         var int fuckThisWorld;
 
-        let mine = 5000;
+        let mine = 100;
         let yours = 0;
         let fuckThisWorld = 0;
 
