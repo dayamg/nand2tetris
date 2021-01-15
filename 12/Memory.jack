@@ -18,7 +18,7 @@ class Memory {
         let ram = 0;
         let heap = 2048; // heap base
         let heap[0] = null; // when the pointer is null, we know that it's the last list.
-        let heap[1] = 14334; // size of heap, stored in the second cell
+        let heap[1] = 14336; // size of heap, stored in the second cell
         let freeList = 0; // index of the head of the first free list
         let lastList = heap;
 
@@ -40,32 +40,50 @@ class Memory {
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
-        var int currListPointer, allocBaseAddress;
-        let currListPointer = freeList;
+        var int currListPointer, prevListPointer, allocBaseAddress, sizeOnHeap;
 
-        while ((size + 2 > heap[currListPointer + 1]) & (~(heap[currListPointer] = null))) {
+        let sizeOnHeap = size + 1; /// True size plus one block for saving size. No need to save pointer, so not +2.
+        let prevListPointer = freeList; /// A pointer that remembers who pointed at the current list
+        let currListPointer = freeList; /// Index within the heap (e.g., currListPointer = 0 is heapBase).
+
+        while ((sizeOnHeap > heap[currListPointer + 1]) & (~(heap[currListPointer] = null))) { // search possible list
+            let prevListPointer = currListPointer;
             let currListPointer = heap[currListPointer] - heap;  // index of the next list
         }
 
         /// If we exited the loop since we reached the end and still no possible list, return null
-        if ((size + 2 > heap[currListPointer + 1]) & (heap[currListPointer] = null)) {
+        if ((sizeOnHeap > heap[currListPointer + 1]) & (heap[currListPointer] = null)) {
             return null;  // No block found. Should not happen to often.
         }
 
-        /// Else, we found a possible list. carve a block of size _size_ from it, and return its base address
-        let allocBaseAddress = currListPointer + heap[currListPointer + 1] - size;
-        let heap[allocBaseAddress] = null;  // Set "next" pointer to null.
-        let heap[currListPointer + 1] = (heap[currListPointer + 1] - 2) - size;
-        let heap[allocBaseAddress + 1] = size;
-        return heap + allocBaseAddress + 2;
+        if ((sizeOnHeap = heap[currListPointer + 1]) |  (size = heap[currListPointer + 1])) {
+            /// In these cases, we need the whole block
+            let heap[prevListPointer] = heap[currListPointer];  /// Remove our block from linked list
+            let heap[currListPointer] = sizeOnHeap; /// Update size
+            return heap + currListPointer + 1;
+        }
+
+        /// Else, we found a possible list. Carve a block of size _size_ from it, and return its base address.
+        let allocBaseAddress = currListPointer + heap[currListPointer + 1] - sizeOnHeap;
+        let heap[currListPointer + 1] = heap[currListPointer + 1] - sizeOnHeap; // Update size of the possible list
+        let heap[allocBaseAddress] = sizeOnHeap;  /// Set size of carved block
+
+        return heap + allocBaseAddress + 1;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array block) {
-        /// append the array block in the end of freeList
-        let lastList[0] = block - 2; // connect the last list to the block
-        let lastList = block - 2;  // update the lastList pointer to point at the base address of block
+        var int blockBase;
+        let blockBase = block - 1;
+
+        /// Append block to the end of the linked list by making the previous lastList point at our block's base
+        let lastList[0] = blockBase;
+        let lastList = blockBase;  // update the lastList pointer to point at the base address of block
+
+        /// We previously saved block's size at blockBase[0]; now we also need to keep a pointer, so:
+        let blockBase[1] = blockBase[0]; // move the size from blockBase[0] to blockBase[1]
+        let blockBase[0] = null; // update the pointer to null
         return;
     }    
 }
