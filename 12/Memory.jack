@@ -59,7 +59,7 @@ class Memory {
         if ((sizeOnHeap = heap[currListPointer + 1]) |  (size = heap[currListPointer + 1])) {
             /// In these cases, we need the whole block
             let heap[prevListPointer] = heap[currListPointer];  /// Remove our block from linked list
-            let heap[currListPointer] = sizeOnHeap; /// Update size
+            let heap[currListPointer] = heap[currListPointer + 1]; /// Update size
             return heap + currListPointer + 1;
         }
 
