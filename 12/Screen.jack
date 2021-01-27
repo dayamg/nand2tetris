@@ -39,7 +39,7 @@ class Screen {
         var int address, value, mask;
         let address = Math.multiplyByPowerOfTwo(y, 5) + Math.divide(x, 16); // 32 * y + x / 16
         let value = screen[address];
-        let mask = Math.powerOfTwo(x & 15);  // mask is the (x % 16)th bit of x
+        let mask = Math.powerOfTwo(x & 15);  // mask is the (x % 16)th bit of x; x&15 = x%16
 
         if (currentColor) {
             let screen[address] = mask | screen[address]; // if current color is black, apply "or"

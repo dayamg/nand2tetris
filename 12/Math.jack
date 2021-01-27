@@ -98,7 +98,7 @@ class Math {
         let sgnY = Math.bit(y, 15);
 
         // The sign is the XOR of x's and y's MSB (except when x = 0 or y = 0, but that is irrelevant here):
-        let sign = (sgnX | sgnY) & (~(sgnX & sgnY));
+        let sign = (sgnX | sgnY) & (~(sgnX & sgnY)); /// Xor(a,b) = Nand(a,b) & Or(a,b)
         let div = Math.dividePositive(Math.abs(x), Math.abs(y));
         if (sign = 0) {
             return div;
