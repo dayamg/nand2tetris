@@ -1,5 +1,4 @@
 from syntax_analyzer import *
-from constants import *
 import os
 
 
@@ -63,11 +62,11 @@ class SymbolTable:
         """
         # First, search in the inner scope:
         if var_name in self.__subroutine_symbol_dict:
-            return self.__subroutine_symbol_dict[var_name][property_number]
+            return self.__subroutine_symbol_dict[var_name]
 
         # Second, search in the outer scope:
         elif var_name in self.__class_symbol_dict:
-            return self.__class_symbol_dict[var_name][property_number]
+            return self.__class_symbol_dict[var_name]
 
         else:
             return None
